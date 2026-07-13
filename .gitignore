@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.streamlit/*
+!.streamlit/config.toml
+.venv/
+venv/
+.python/
+python-*-amd64.exe
+dist/
+build/
+/to-cloud/

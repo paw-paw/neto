@@ -1,0 +1,1011 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://neto.local/schemas/neto-parser-key-v2.schema.json",
+  "title": "NETO ParserKey v2",
+  "description": "Universal declarative ParserKey contract. Structural validation is handled by JSON Schema; operator-specific semantic validation is handled by the NETO operator registry.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "parser_key_id",
+    "key_name",
+    "status",
+    "runtime",
+    "tournament",
+    "workbook",
+    "sources",
+    "record_sets",
+    "normalization",
+    "validation",
+    "output",
+    "extensions",
+    "metadata"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "neto.parser_key.v2"
+    },
+    "parser_key_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*_v[0-9]+$"
+    },
+    "key_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "enabled",
+        "disabled",
+        "deprecated"
+      ]
+    },
+    "runtime": {
+      "type": "object",
+      "required": [
+        "minimum_neto_version",
+        "operator_registry_version",
+        "required_operators",
+        "required_plugins"
+      ],
+      "properties": {
+        "minimum_neto_version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "operator_registry_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "required_operators": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$"
+          },
+          "uniqueItems": true
+        },
+        "required_plugins": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "plugin_id",
+              "version"
+            ],
+            "properties": {
+              "plugin_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1
+              },
+              "config": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "tournament": {
+      "type": "object",
+      "required": [
+        "name",
+        "base_timezone",
+        "timezone_source"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "game": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "organizer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "base_timezone": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IANA timezone name, for example Europe/Madrid."
+        },
+        "timezone_source": {
+          "const": "parser_key"
+        },
+        "season_or_edition": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "workbook": {
+      "type": "object",
+      "required": [
+        "file_type",
+        "date_system",
+        "sheet_matching_default",
+        "formula_value_policy",
+        "hidden_content_policy"
+      ],
+      "properties": {
+        "file_type": {
+          "const": "xlsx"
+        },
+        "date_system": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "1900",
+            "1904"
+          ]
+        },
+        "sheet_matching_default": {
+          "type": "string",
+          "enum": [
+            "exact",
+            "case_insensitive",
+            "regex",
+            "index"
+          ]
+        },
+        "formula_value_policy": {
+          "type": "object",
+          "required": [
+            "mode",
+            "fallback_order",
+            "on_missing_cached_value"
+          ],
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "first_available",
+                "cached_value_only",
+                "raw_value",
+                "formula_text"
+              ]
+            },
+            "fallback_order": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "cached_value",
+                  "raw_value",
+                  "display_value",
+                  "formula_text"
+                ]
+              },
+              "uniqueItems": true
+            },
+            "on_missing_cached_value": {
+              "type": "string",
+              "enum": [
+                "blocking_error",
+                "warning",
+                "use_formula_text",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "hidden_content_policy": {
+          "type": "object",
+          "required": [
+            "include_hidden_sheets",
+            "include_hidden_rows",
+            "include_hidden_columns"
+          ],
+          "properties": {
+            "include_hidden_sheets": {
+              "type": "boolean"
+            },
+            "include_hidden_rows": {
+              "type": "boolean"
+            },
+            "include_hidden_columns": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "source_id",
+          "sheet_locator",
+          "value_mode"
+        ],
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "sheet_locator": {
+            "$ref": "#/$defs/operatorNode"
+          },
+          "value_mode": {
+            "type": "string",
+            "enum": [
+              "inherit",
+              "cached_value",
+              "raw_value",
+              "display_value",
+              "formula_text"
+            ]
+          },
+          "required": {
+            "type": "boolean",
+            "default": true
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "record_sets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "record_set_id",
+          "enabled",
+          "source_id",
+          "locator",
+          "filter",
+          "context",
+          "extractors",
+          "fields",
+          "additional_fields",
+          "overrides",
+          "provenance"
+        ],
+        "properties": {
+          "record_set_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "source_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "locator": {
+            "$ref": "#/$defs/operatorNode"
+          },
+          "filter": {
+            "$ref": "#/$defs/operatorNode"
+          },
+          "context": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "required": [
+                "scope",
+                "value"
+              ],
+              "properties": {
+                "scope": {
+                  "type": "string",
+                  "enum": [
+                    "source",
+                    "record_set",
+                    "block",
+                    "record"
+                  ]
+                },
+                "value": {
+                  "$ref": "#/$defs/valuePipeline"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "extractors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "extractor_id",
+                "input",
+                "operator",
+                "on_failure"
+              ],
+              "properties": {
+                "extractor_id": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                },
+                "input": {
+                  "$ref": "#/$defs/valuePipeline"
+                },
+                "operator": {
+                  "$ref": "#/$defs/operatorNode"
+                },
+                "on_failure": {
+                  "type": "string",
+                  "enum": [
+                    "blocking_error",
+                    "warning",
+                    "skip_record",
+                    "null"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "fields": {
+            "type": "object",
+            "properties": {
+              "date": {
+                "$ref": "#/$defs/fieldSpec"
+              },
+              "time": {
+                "$ref": "#/$defs/fieldSpec"
+              },
+              "start_datetime": {
+                "$ref": "#/$defs/fieldSpec"
+              },
+              "timezone": {
+                "$ref": "#/$defs/fieldSpec"
+              },
+              "team_a": {
+                "$ref": "#/$defs/fieldSpec"
+              },
+              "team_b": {
+                "$ref": "#/$defs/fieldSpec"
+              },
+              "stage": {
+                "$ref": "#/$defs/fieldSpec"
+              },
+              "bo": {
+                "$ref": "#/$defs/fieldSpec"
+              },
+              "match_label": {
+                "$ref": "#/$defs/fieldSpec"
+              },
+              "round": {
+                "$ref": "#/$defs/fieldSpec"
+              },
+              "group": {
+                "$ref": "#/$defs/fieldSpec"
+              },
+              "stream": {
+                "$ref": "#/$defs/fieldSpec"
+              },
+              "venue": {
+                "$ref": "#/$defs/fieldSpec"
+              },
+              "notes": {
+                "$ref": "#/$defs/fieldSpec"
+              }
+            },
+            "required": [
+              "team_a",
+              "team_b"
+            ],
+            "anyOf": [
+              {
+                "required": [
+                  "start_datetime"
+                ]
+              },
+              {
+                "required": [
+                  "date",
+                  "time"
+                ]
+              }
+            ],
+            "additionalProperties": false
+          },
+          "additional_fields": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/$defs/fieldSpec"
+            }
+          },
+          "overrides": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "when",
+                "set"
+              ],
+              "properties": {
+                "when": {
+                  "$ref": "#/$defs/operatorNode"
+                },
+                "set": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/$defs/fieldSpec"
+                  }
+                },
+                "reason": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "provenance": {
+            "type": "object",
+            "required": [
+              "enabled",
+              "include_source_coordinates",
+              "include_transform_chain",
+              "include_override_reason"
+            ],
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "include_source_coordinates": {
+                "type": "boolean"
+              },
+              "include_transform_chain": {
+                "type": "boolean"
+              },
+              "include_override_reason": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "normalization": {
+      "type": "object",
+      "required": [
+        "strings",
+        "datetime",
+        "teams",
+        "best_of"
+      ],
+      "properties": {
+        "strings": {
+          "type": "object",
+          "required": [
+            "trim",
+            "collapse_internal_whitespace",
+            "replace_line_breaks_with_space",
+            "preserve_casing"
+          ],
+          "properties": {
+            "trim": {
+              "type": "boolean"
+            },
+            "collapse_internal_whitespace": {
+              "type": "boolean"
+            },
+            "replace_line_breaks_with_space": {
+              "type": "boolean"
+            },
+            "preserve_casing": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "datetime": {
+          "type": "object",
+          "required": [
+            "precedence",
+            "timezone_fallback",
+            "dst_policy",
+            "utc_output_format",
+            "ambiguous_time_policy",
+            "nonexistent_time_policy"
+          ],
+          "properties": {
+            "precedence": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "start_datetime",
+                  "date_plus_time"
+                ]
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "timezone_fallback": {
+              "const": "tournament.base_timezone"
+            },
+            "dst_policy": {
+              "const": "iana"
+            },
+            "utc_output_format": {
+              "type": "string"
+            },
+            "ambiguous_time_policy": {
+              "type": "string",
+              "enum": [
+                "blocking_error",
+                "earlier_offset",
+                "later_offset"
+              ]
+            },
+            "nonexistent_time_policy": {
+              "type": "string",
+              "enum": [
+                "blocking_error",
+                "shift_forward",
+                "shift_backward"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "teams": {
+          "type": "object",
+          "required": [
+            "allow_placeholders",
+            "placeholder_values",
+            "placeholder_patterns"
+          ],
+          "properties": {
+            "allow_placeholders": {
+              "type": "boolean"
+            },
+            "placeholder_values": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "placeholder_patterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "best_of": {
+          "type": "object",
+          "required": [
+            "normalize",
+            "output_format"
+          ],
+          "properties": {
+            "normalize": {
+              "type": "boolean"
+            },
+            "output_format": {
+              "type": "string",
+              "enum": [
+                "BO{n}",
+                "Bo{n}",
+                "integer",
+                "preserve"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "validation": {
+      "type": "object",
+      "required": [
+        "blocking_fields",
+        "warning_fields",
+        "duplicate_check",
+        "record_count",
+        "custom_rules"
+      ],
+      "properties": {
+        "blocking_fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "warning_fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "duplicate_check": {
+          "type": "object",
+          "required": [
+            "enabled",
+            "severity",
+            "fields",
+            "team_order_sensitive"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "severity": {
+              "type": "string",
+              "enum": [
+                "warning",
+                "blocking_error"
+              ]
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "team_order_sensitive": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "record_count": {
+          "type": "object",
+          "required": [
+            "minimum",
+            "maximum",
+            "on_violation"
+          ],
+          "properties": {
+            "minimum": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "maximum": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "on_violation": {
+              "type": "string",
+              "enum": [
+                "blocking_error",
+                "warning"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "custom_rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "rule_id",
+              "predicate",
+              "severity",
+              "message"
+            ],
+            "properties": {
+              "rule_id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "predicate": {
+                "$ref": "#/$defs/operatorNode"
+              },
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "warning",
+                  "blocking_error"
+                ]
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "output": {
+      "type": "object",
+      "required": [
+        "model",
+        "columns",
+        "csv_columns",
+        "preserve_source_order",
+        "include_provenance_in_internal_result"
+      ],
+      "properties": {
+        "model": {
+          "const": "neto.normalized_match.v1"
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "csv_columns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "preserve_source_order": {
+          "type": "boolean"
+        },
+        "include_provenance_in_internal_result": {
+          "type": "boolean"
+        },
+        "sort": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "field",
+              "direction"
+            ],
+            "properties": {
+              "field": {
+                "type": "string"
+              },
+              "direction": {
+                "type": "string",
+                "enum": [
+                  "asc",
+                  "desc"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "extensions": {
+      "type": "object",
+      "required": [
+        "plugins",
+        "custom_config"
+      ],
+      "properties": {
+        "plugins": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "plugin_id",
+              "entrypoint",
+              "config"
+            ],
+            "properties": {
+              "plugin_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "entrypoint": {
+                "type": "string",
+                "minLength": 1
+              },
+              "config": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "custom_config": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object",
+      "required": [
+        "created_at",
+        "created_by",
+        "notes"
+      ],
+      "properties": {
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "created_by": {
+          "type": "string",
+          "minLength": 1
+        },
+        "updated_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "source_files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "filename"
+            ],
+            "properties": {
+              "filename": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "notes": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "operatorNode": {
+      "type": "object",
+      "required": [
+        "op",
+        "args"
+      ],
+      "properties": {
+        "op": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$",
+          "description": "Namespaced operator identifier resolved by the NETO runtime."
+        },
+        "args": {
+          "type": "object",
+          "description": "Operator-specific arguments. Semantic validation is performed by the operator registry.",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "valuePipeline": {
+      "type": "object",
+      "required": [
+        "source",
+        "transforms"
+      ],
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/operatorNode"
+        },
+        "transforms": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/operatorNode"
+          }
+        },
+        "fallbacks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/valuePipeline"
+          },
+          "default": []
+        }
+      },
+      "additionalProperties": false
+    },
+    "fieldSpec": {
+      "type": "object",
+      "required": [
+        "value",
+        "required",
+        "on_missing"
+      ],
+      "properties": {
+        "value": {
+          "$ref": "#/$defs/valuePipeline"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "on_missing": {
+          "type": "string",
+          "enum": [
+            "blocking_error",
+            "warning",
+            "null",
+            "skip_record",
+            "use_default"
+          ]
+        },
+        "default": {},
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "provenance": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "include_transform_chain": {
+              "type": "boolean"
+            },
+            "include_source_coordinates": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

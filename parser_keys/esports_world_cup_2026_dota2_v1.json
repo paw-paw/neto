@@ -1,0 +1,1501 @@
+{
+  "$schema": "../neto_parserkey_v2.schema.json",
+  "schema_version": "neto.parser_key.v2",
+  "parser_key_id": "esports_world_cup_2026_dota2_v1",
+  "key_name": "Esports World Cup 2026 — Dota 2",
+  "status": "enabled",
+  "runtime": {
+    "minimum_neto_version": "0.1.0",
+    "operator_registry_version": "neto.operators.v1",
+    "required_operators": [
+      "cell.column",
+      "datetime.excel_fraction_to_time",
+      "datetime.excel_serial_to_date",
+      "datetime.format_date",
+      "extract.regex",
+      "extractor.output",
+      "literal.value",
+      "predicate.all",
+      "predicate.not_empty",
+      "records.row_ranges",
+      "sheet.exact",
+      "text.to_string",
+      "text.trim"
+    ],
+    "required_plugins": []
+  },
+  "tournament": {
+    "name": "Esports World Cup 2026 — Dota 2",
+    "game": "Dota 2",
+    "organizer": "Esports World Cup",
+    "base_timezone": "Europe/Berlin",
+    "timezone_source": "parser_key",
+    "season_or_edition": null
+  },
+  "workbook": {
+    "file_type": "xlsx",
+    "date_system": "auto",
+    "sheet_matching_default": "exact",
+    "formula_value_policy": {
+      "mode": "cached_value_only",
+      "fallback_order": [
+        "cached_value"
+      ],
+      "on_missing_cached_value": "warning"
+    },
+    "hidden_content_policy": {
+      "include_hidden_sheets": false,
+      "include_hidden_rows": false,
+      "include_hidden_columns": false
+    }
+  },
+  "sources": [
+    {
+      "source_id": "schedule",
+      "sheet_locator": {
+        "op": "sheet.exact",
+        "args": {
+          "sheet_name": "Schedule"
+        }
+      },
+      "value_mode": "inherit",
+      "required": true,
+      "description": "Public CEST schedule imported from a Google Sheets source."
+    }
+  ],
+  "record_sets": [
+    {
+      "record_set_id": "group_stage",
+      "enabled": true,
+      "source_id": "schedule",
+      "locator": {
+        "op": "records.row_ranges",
+        "args": {
+          "ranges": [
+            {
+              "start_row": 7,
+              "end_row": 84
+            }
+          ],
+          "anchor_column": "C"
+        }
+      },
+      "filter": {
+        "op": "predicate.all",
+        "args": {
+          "predicates": [
+            {
+              "op": "predicate.not_empty",
+              "args": {
+                "value": {
+                  "op": "cell.column",
+                  "args": {
+                    "column": "C"
+                  }
+                }
+              }
+            },
+            {
+              "op": "predicate.not_empty",
+              "args": {
+                "value": {
+                  "op": "cell.column",
+                  "args": {
+                    "column": "G"
+                  }
+                }
+              }
+            },
+            {
+              "op": "predicate.not_empty",
+              "args": {
+                "value": {
+                  "op": "cell.column",
+                  "args": {
+                    "column": "H"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "context": {},
+      "extractors": [
+        {
+          "extractor_id": "match_text",
+          "input": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "O"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "operator": {
+            "op": "extract.regex",
+            "args": {
+              "patterns": [
+                {
+                  "pattern": "^\\s*(?P<team_a>.+?)\\s+vs\\.?\\s+(?P<team_b>.+?)\\s*$",
+                  "flags": [
+                    "IGNORECASE"
+                  ]
+                }
+              ],
+              "named_outputs": [
+                "team_a",
+                "team_b"
+              ]
+            }
+          },
+          "on_failure": "null"
+        }
+      ],
+      "fields": {
+        "date": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "C"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.excel_serial_to_date",
+                "args": {
+                  "date_system": "inherit"
+                }
+              },
+              {
+                "op": "datetime.format_date",
+                "args": {
+                  "format": "%Y-%m-%d"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "time": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "H"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.excel_fraction_to_time",
+                "args": {
+                  "output_format": "%H:%M"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_a": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "match_text",
+                "output": "team_a"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_b": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "match_text",
+                "output": "team_b"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stage": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Group Stage"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "bo": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "G"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "warning",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "match_label": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "N"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": false,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "additional_fields": {
+        "stream": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "F"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stage_code": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "E"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "comment": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "P"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "overrides": [],
+      "provenance": {
+        "enabled": true,
+        "include_source_coordinates": true,
+        "include_transform_chain": true,
+        "include_override_reason": true
+      }
+    },
+    {
+      "record_set_id": "survival",
+      "enabled": true,
+      "source_id": "schedule",
+      "locator": {
+        "op": "records.row_ranges",
+        "args": {
+          "ranges": [
+            {
+              "start_row": 85,
+              "end_row": 97
+            }
+          ],
+          "anchor_column": "C"
+        }
+      },
+      "filter": {
+        "op": "predicate.all",
+        "args": {
+          "predicates": [
+            {
+              "op": "predicate.not_empty",
+              "args": {
+                "value": {
+                  "op": "cell.column",
+                  "args": {
+                    "column": "C"
+                  }
+                }
+              }
+            },
+            {
+              "op": "predicate.not_empty",
+              "args": {
+                "value": {
+                  "op": "cell.column",
+                  "args": {
+                    "column": "G"
+                  }
+                }
+              }
+            },
+            {
+              "op": "predicate.not_empty",
+              "args": {
+                "value": {
+                  "op": "cell.column",
+                  "args": {
+                    "column": "H"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "context": {},
+      "extractors": [
+        {
+          "extractor_id": "match_text",
+          "input": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "O"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "operator": {
+            "op": "extract.regex",
+            "args": {
+              "patterns": [
+                {
+                  "pattern": "^\\s*(?P<team_a>.+?)\\s+vs\\.?\\s+(?P<team_b>.+?)\\s*$",
+                  "flags": [
+                    "IGNORECASE"
+                  ]
+                }
+              ],
+              "named_outputs": [
+                "team_a",
+                "team_b"
+              ]
+            }
+          },
+          "on_failure": "null"
+        }
+      ],
+      "fields": {
+        "date": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "C"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.excel_serial_to_date",
+                "args": {
+                  "date_system": "inherit"
+                }
+              },
+              {
+                "op": "datetime.format_date",
+                "args": {
+                  "format": "%Y-%m-%d"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "time": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "H"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.excel_fraction_to_time",
+                "args": {
+                  "output_format": "%H:%M"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_a": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "match_text",
+                "output": "team_a"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_b": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "match_text",
+                "output": "team_b"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stage": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Survival"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "bo": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "G"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "warning",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "match_label": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "N"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": false,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "additional_fields": {
+        "stream": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "F"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stage_code": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "E"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "comment": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "P"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "overrides": [],
+      "provenance": {
+        "enabled": true,
+        "include_source_coordinates": true,
+        "include_transform_chain": true,
+        "include_override_reason": true
+      }
+    },
+    {
+      "record_set_id": "playoffs",
+      "enabled": true,
+      "source_id": "schedule",
+      "locator": {
+        "op": "records.row_ranges",
+        "args": {
+          "ranges": [
+            {
+              "start_row": 98,
+              "end_row": 106
+            }
+          ],
+          "anchor_column": "C"
+        }
+      },
+      "filter": {
+        "op": "predicate.all",
+        "args": {
+          "predicates": [
+            {
+              "op": "predicate.not_empty",
+              "args": {
+                "value": {
+                  "op": "cell.column",
+                  "args": {
+                    "column": "C"
+                  }
+                }
+              }
+            },
+            {
+              "op": "predicate.not_empty",
+              "args": {
+                "value": {
+                  "op": "cell.column",
+                  "args": {
+                    "column": "G"
+                  }
+                }
+              }
+            },
+            {
+              "op": "predicate.not_empty",
+              "args": {
+                "value": {
+                  "op": "cell.column",
+                  "args": {
+                    "column": "H"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "context": {},
+      "extractors": [
+        {
+          "extractor_id": "match_text",
+          "input": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "O"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "operator": {
+            "op": "extract.regex",
+            "args": {
+              "patterns": [
+                {
+                  "pattern": "^\\s*(?P<team_a>.+?)\\s+vs\\.?\\s+(?P<team_b>.+?)\\s*$",
+                  "flags": [
+                    "IGNORECASE"
+                  ]
+                }
+              ],
+              "named_outputs": [
+                "team_a",
+                "team_b"
+              ]
+            }
+          },
+          "on_failure": "null"
+        }
+      ],
+      "fields": {
+        "date": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "C"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.excel_serial_to_date",
+                "args": {
+                  "date_system": "inherit"
+                }
+              },
+              {
+                "op": "datetime.format_date",
+                "args": {
+                  "format": "%Y-%m-%d"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "time": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "H"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.excel_fraction_to_time",
+                "args": {
+                  "output_format": "%H:%M"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_a": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "match_text",
+                "output": "team_a"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_b": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "match_text",
+                "output": "team_b"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stage": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Playoffs"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "bo": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "G"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "warning",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "match_label": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "N"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": false,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "additional_fields": {
+        "stream": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "F"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stage_code": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "E"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "comment": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "P"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "overrides": [],
+      "provenance": {
+        "enabled": true,
+        "include_source_coordinates": true,
+        "include_transform_chain": true,
+        "include_override_reason": true
+      }
+    }
+  ],
+  "normalization": {
+    "strings": {
+      "trim": true,
+      "collapse_internal_whitespace": true,
+      "replace_line_breaks_with_space": true,
+      "preserve_casing": true
+    },
+    "datetime": {
+      "precedence": [
+        "start_datetime",
+        "date_plus_time"
+      ],
+      "timezone_fallback": "tournament.base_timezone",
+      "dst_policy": "iana",
+      "utc_output_format": "%Y-%m-%dT%H:%M:%SZ",
+      "ambiguous_time_policy": "blocking_error",
+      "nonexistent_time_policy": "blocking_error"
+    },
+    "teams": {
+      "allow_placeholders": true,
+      "placeholder_values": [
+        "TBD",
+        "TBA"
+      ],
+      "placeholder_patterns": [
+        "^(Winner|Loser)\\s+M\\d+$",
+        "^Swiss\\s+#?\\d+\\s+Seed$",
+        "^Seed\\s+#?\\d+$",
+        "^Qualifier\\s+\\d+$",
+        "^Team\\s+\\d+\\s+\\(Playoff\\)$"
+      ]
+    },
+    "best_of": {
+      "normalize": true,
+      "output_format": "BO{n}"
+    }
+  },
+  "validation": {
+    "blocking_fields": [
+      "start_time_utc",
+      "team_a",
+      "team_b"
+    ],
+    "warning_fields": [
+      "stage",
+      "bo",
+      "match_label"
+    ],
+    "duplicate_check": {
+      "enabled": true,
+      "severity": "warning",
+      "fields": [
+        "start_time_utc",
+        "team_a",
+        "team_b"
+      ],
+      "team_order_sensitive": true
+    },
+    "record_count": {
+      "minimum": 88,
+      "maximum": 88,
+      "on_violation": "blocking_error"
+    },
+    "custom_rules": []
+  },
+  "output": {
+    "model": "neto.normalized_match.v1",
+    "columns": [
+      "date_original",
+      "time_original",
+      "timezone",
+      "start_time_utc",
+      "team_a",
+      "team_b",
+      "stage",
+      "bo",
+      "match_label",
+      "row_status"
+    ],
+    "csv_columns": [
+      "date_original",
+      "time_original",
+      "timezone",
+      "start_time_utc",
+      "team_a",
+      "team_b",
+      "stage",
+      "bo",
+      "match_label"
+    ],
+    "preserve_source_order": true,
+    "include_provenance_in_internal_result": true,
+    "sort": []
+  },
+  "extensions": {
+    "plugins": [],
+    "custom_config": {}
+  },
+  "metadata": {
+    "created_at": "2026-07-12T00:57:12Z",
+    "created_by": "NETO corpus design",
+    "updated_at": null,
+    "source_files": [
+      {
+        "filename": "[PUBLIC] Dota2 _ Tournament Overview _ Esports World Cup 2026.xlsx",
+        "sha256": "5062a4bb16bbe9cb0eef89edbc48461ba68a881b1cf47f5cf6840de31206478c"
+      }
+    ],
+    "notes": "The XLSX contains Google-Sheets-derived formulas represented as dummy functions. NETO must consume cached values rather than evaluate the formula text. Published match strings are split into teams; unpublished slots become TBD vs TBD.",
+    "tags": [
+      "cached_google_sheets_formulas",
+      "compound_match_text",
+      "multiple_phases",
+      "future_slots_as_tbd"
+    ]
+  }
+}

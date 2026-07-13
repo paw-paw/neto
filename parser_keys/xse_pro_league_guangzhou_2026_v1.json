@@ -1,0 +1,1014 @@
+{
+  "$schema": "../neto_parserkey_v2.schema.json",
+  "schema_version": "neto.parser_key.v2",
+  "parser_key_id": "xse_pro_league_guangzhou_2026_v1",
+  "key_name": "XSE Pro League Guangzhou 2026",
+  "status": "enabled",
+  "runtime": {
+    "minimum_neto_version": "0.1.0",
+    "operator_registry_version": "neto.operators.v1",
+    "required_operators": [
+      "cell.column",
+      "cell.merged_origin",
+      "datetime.excel_fraction_to_time",
+      "datetime.format_date",
+      "datetime.inject_year",
+      "datetime.parse_date",
+      "literal.value",
+      "predicate.all",
+      "predicate.not_empty",
+      "record.row_index",
+      "records.row_ranges",
+      "sheet.exact",
+      "text.regex_replace",
+      "text.to_string",
+      "text.trim"
+    ],
+    "required_plugins": []
+  },
+  "tournament": {
+    "name": "XSE Pro League Guangzhou 2026",
+    "game": "Counter-Strike 2",
+    "organizer": "XSE",
+    "base_timezone": "Asia/Shanghai",
+    "timezone_source": "parser_key",
+    "season_or_edition": null
+  },
+  "workbook": {
+    "file_type": "xlsx",
+    "date_system": "auto",
+    "sheet_matching_default": "exact",
+    "formula_value_policy": {
+      "mode": "first_available",
+      "fallback_order": [
+        "cached_value",
+        "raw_value",
+        "display_value"
+      ],
+      "on_missing_cached_value": "warning"
+    },
+    "hidden_content_policy": {
+      "include_hidden_sheets": false,
+      "include_hidden_rows": false,
+      "include_hidden_columns": false
+    }
+  },
+  "sources": [
+    {
+      "source_id": "group_schedule",
+      "sheet_locator": {
+        "op": "sheet.exact",
+        "args": {
+          "sheet_name": "Group Stage Schedule"
+        }
+      },
+      "value_mode": "inherit",
+      "required": true,
+      "description": "Group-stage schedule using China Standard Time."
+    },
+    {
+      "source_id": "playoff_schedule",
+      "sheet_locator": {
+        "op": "sheet.exact",
+        "args": {
+          "sheet_name": "Playoffs Stage Schedule"
+        }
+      },
+      "value_mode": "inherit",
+      "required": true,
+      "description": "Playoff schedule using China Standard Time."
+    }
+  ],
+  "record_sets": [
+    {
+      "record_set_id": "group_stage",
+      "enabled": true,
+      "source_id": "group_schedule",
+      "locator": {
+        "op": "records.row_ranges",
+        "args": {
+          "ranges": [
+            {
+              "start_row": 4,
+              "end_row": 40
+            }
+          ],
+          "anchor_column": "E"
+        }
+      },
+      "filter": {
+        "op": "predicate.all",
+        "args": {
+          "predicates": [
+            {
+              "op": "predicate.not_empty",
+              "args": {
+                "value": {
+                  "op": "cell.column",
+                  "args": {
+                    "column": "E"
+                  }
+                }
+              }
+            },
+            {
+              "op": "predicate.not_empty",
+              "args": {
+                "value": {
+                  "op": "cell.column",
+                  "args": {
+                    "column": "F"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "context": {},
+      "extractors": [],
+      "fields": {
+        "date": {
+          "value": {
+            "source": {
+              "op": "cell.merged_origin",
+              "args": {
+                "column": "C",
+                "fallback": "nearest_non_empty_above"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.regex_replace",
+                "args": {
+                  "pattern": "，",
+                  "replacement": ","
+                }
+              },
+              {
+                "op": "datetime.parse_date",
+                "args": {
+                  "formats": [
+                    "%A, %B %d"
+                  ],
+                  "locale": "en"
+                }
+              },
+              {
+                "op": "datetime.inject_year",
+                "args": {
+                  "year": 2026
+                }
+              },
+              {
+                "op": "datetime.format_date",
+                "args": {
+                  "format": "%Y-%m-%d"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "time": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "F"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.excel_fraction_to_time",
+                "args": {
+                  "output_format": "%H:%M"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_a": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "I"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_b": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "K"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stage": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Group Stage"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "bo": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "E"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "warning",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "match_label": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "H"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "record.row_index",
+                  "args": {}
+                },
+                "transforms": [
+                  {
+                    "op": "text.to_string",
+                    "args": {}
+                  }
+                ],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": false,
+          "on_missing": "warning",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "additional_fields": {
+        "stream": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "D"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "secondary_time_cest": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "G"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.excel_fraction_to_time",
+                "args": {
+                  "output_format": "%H:%M"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "comment": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "L"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "overrides": [],
+      "provenance": {
+        "enabled": true,
+        "include_source_coordinates": true,
+        "include_transform_chain": true,
+        "include_override_reason": true
+      }
+    },
+    {
+      "record_set_id": "playoffs",
+      "enabled": true,
+      "source_id": "playoff_schedule",
+      "locator": {
+        "op": "records.row_ranges",
+        "args": {
+          "ranges": [
+            {
+              "start_row": 4,
+              "end_row": 14
+            }
+          ],
+          "anchor_column": "E"
+        }
+      },
+      "filter": {
+        "op": "predicate.all",
+        "args": {
+          "predicates": [
+            {
+              "op": "predicate.not_empty",
+              "args": {
+                "value": {
+                  "op": "cell.column",
+                  "args": {
+                    "column": "E"
+                  }
+                }
+              }
+            },
+            {
+              "op": "predicate.not_empty",
+              "args": {
+                "value": {
+                  "op": "cell.column",
+                  "args": {
+                    "column": "F"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "context": {},
+      "extractors": [],
+      "fields": {
+        "date": {
+          "value": {
+            "source": {
+              "op": "cell.merged_origin",
+              "args": {
+                "column": "C",
+                "fallback": "nearest_non_empty_above"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.regex_replace",
+                "args": {
+                  "pattern": "，",
+                  "replacement": ","
+                }
+              },
+              {
+                "op": "datetime.parse_date",
+                "args": {
+                  "formats": [
+                    "%A, %B %d"
+                  ],
+                  "locale": "en"
+                }
+              },
+              {
+                "op": "datetime.inject_year",
+                "args": {
+                  "year": 2026
+                }
+              },
+              {
+                "op": "datetime.format_date",
+                "args": {
+                  "format": "%Y-%m-%d"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "time": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "F"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.excel_fraction_to_time",
+                "args": {
+                  "output_format": "%H:%M"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_a": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "I"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_b": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "K"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stage": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Playoffs"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "bo": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "E"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "warning",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "match_label": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "H"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "record.row_index",
+                  "args": {}
+                },
+                "transforms": [
+                  {
+                    "op": "text.to_string",
+                    "args": {}
+                  }
+                ],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": false,
+          "on_missing": "warning",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "additional_fields": {
+        "stream": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "D"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "secondary_time_cest": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "G"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.excel_fraction_to_time",
+                "args": {
+                  "output_format": "%H:%M"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "comment": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "L"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "overrides": [],
+      "provenance": {
+        "enabled": true,
+        "include_source_coordinates": true,
+        "include_transform_chain": true,
+        "include_override_reason": true
+      }
+    }
+  ],
+  "normalization": {
+    "strings": {
+      "trim": true,
+      "collapse_internal_whitespace": true,
+      "replace_line_breaks_with_space": true,
+      "preserve_casing": true
+    },
+    "datetime": {
+      "precedence": [
+        "start_datetime",
+        "date_plus_time"
+      ],
+      "timezone_fallback": "tournament.base_timezone",
+      "dst_policy": "iana",
+      "utc_output_format": "%Y-%m-%dT%H:%M:%SZ",
+      "ambiguous_time_policy": "blocking_error",
+      "nonexistent_time_policy": "blocking_error"
+    },
+    "teams": {
+      "allow_placeholders": true,
+      "placeholder_values": [
+        "TBD",
+        "TBA"
+      ],
+      "placeholder_patterns": [
+        "^(Winner|Loser)\\s+M\\d+$",
+        "^Swiss\\s+#?\\d+\\s+Seed$",
+        "^Seed\\s+#?\\d+$",
+        "^Qualifier\\s+\\d+$",
+        "^Team\\s+\\d+\\s+\\(Playoff\\)$"
+      ]
+    },
+    "best_of": {
+      "normalize": true,
+      "output_format": "BO{n}"
+    }
+  },
+  "validation": {
+    "blocking_fields": [
+      "start_time_utc",
+      "team_a",
+      "team_b"
+    ],
+    "warning_fields": [
+      "stage",
+      "bo",
+      "match_label"
+    ],
+    "duplicate_check": {
+      "enabled": true,
+      "severity": "warning",
+      "fields": [
+        "start_time_utc",
+        "team_a",
+        "team_b"
+      ],
+      "team_order_sensitive": true
+    },
+    "record_count": {
+      "minimum": 41,
+      "maximum": 41,
+      "on_violation": "blocking_error"
+    },
+    "custom_rules": []
+  },
+  "output": {
+    "model": "neto.normalized_match.v1",
+    "columns": [
+      "date_original",
+      "time_original",
+      "timezone",
+      "start_time_utc",
+      "team_a",
+      "team_b",
+      "stage",
+      "bo",
+      "match_label",
+      "row_status"
+    ],
+    "csv_columns": [
+      "date_original",
+      "time_original",
+      "timezone",
+      "start_time_utc",
+      "team_a",
+      "team_b",
+      "stage",
+      "bo",
+      "match_label"
+    ],
+    "preserve_source_order": true,
+    "include_provenance_in_internal_result": true,
+    "sort": []
+  },
+  "extensions": {
+    "plugins": [],
+    "custom_config": {}
+  },
+  "metadata": {
+    "created_at": "2026-07-12T00:57:12Z",
+    "created_by": "NETO corpus design",
+    "updated_at": null,
+    "source_files": [
+      {
+        "filename": "XSE PRO LEAGUE_GuangZhou_2026 - Tournament Overview 「PUBLIC」.xlsx",
+        "sha256": "a4dfd1993d134b7952cb0e07592f866908a70d95ebd2624960aa87475fdfa2f3"
+      }
+    ],
+    "notes": "Two schedule sheets share the same shape. Dates are merged over each tournament day. The primary time source is CST/Asia-Shanghai; the CEST column is retained only as auxiliary data.",
+    "tags": [
+      "multiple_sheets",
+      "merged_dates",
+      "dual_timezone_columns",
+      "year_injection"
+    ]
+  }
+}
