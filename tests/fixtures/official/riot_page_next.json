@@ -1,0 +1,19 @@
+{
+  "data": {
+    "esports": {
+      "events": [
+        {
+          "id": "riot-3",
+          "blockName": "Groups",
+          "startTime": "2026-07-02T14:00:00Z",
+          "state": "inProgress",
+          "league": {"id": "league-a", "name": "VCT Test", "slug": "vct-test"},
+          "tournament": {"id": "tour-a", "name": "Stage 1"},
+          "matchTeams": [],
+          "match": {"id": "riot-3", "state": "inProgress", "strategy": {"type": "bestOf", "count": 3}}
+        }
+      ],
+      "pages": {"older": "next-page", "newer": null}
+    }
+  }
+}

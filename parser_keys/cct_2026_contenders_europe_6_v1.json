@@ -1,0 +1,532 @@
+{
+  "$schema": "../neto_parserkey_v2.schema.json",
+  "schema_version": "neto.parser_key.v2",
+  "parser_key_id": "cct_2026_contenders_europe_6_v1",
+  "key_name": "CCT 2026 Contenders Europe 6",
+  "status": "enabled",
+  "runtime": {
+    "minimum_neto_version": "0.1.0",
+    "operator_registry_version": "neto.operators.v1",
+    "required_operators": [
+      "cell.column",
+      "cell.merged_origin",
+      "datetime.excel_serial_to_date",
+      "datetime.format_date",
+      "datetime.format_time",
+      "datetime.parse_time",
+      "literal.value",
+      "predicate.not_empty",
+      "records.row_ranges",
+      "sheet.exact",
+      "text.regex_extract",
+      "text.to_string",
+      "text.trim"
+    ],
+    "required_plugins": []
+  },
+  "tournament": {
+    "name": "CCT 2026 Contenders Europe 6",
+    "game": "Counter-Strike 2",
+    "organizer": "CCT",
+    "base_timezone": "Europe/Berlin",
+    "timezone_source": "parser_key",
+    "season_or_edition": null
+  },
+  "workbook": {
+    "file_type": "xlsx",
+    "date_system": "auto",
+    "sheet_matching_default": "exact",
+    "formula_value_policy": {
+      "mode": "first_available",
+      "fallback_order": [
+        "cached_value",
+        "raw_value",
+        "display_value"
+      ],
+      "on_missing_cached_value": "warning"
+    },
+    "hidden_content_policy": {
+      "include_hidden_sheets": false,
+      "include_hidden_rows": false,
+      "include_hidden_columns": false
+    }
+  },
+  "sources": [
+    {
+      "source_id": "schedule",
+      "sheet_locator": {
+        "op": "sheet.exact",
+        "args": {
+          "sheet_name": "Schedule"
+        }
+      },
+      "value_mode": "inherit",
+      "required": true,
+      "description": "Public main-event schedule."
+    }
+  ],
+  "record_sets": [
+    {
+      "record_set_id": "main_event",
+      "enabled": true,
+      "source_id": "schedule",
+      "locator": {
+        "op": "records.row_ranges",
+        "args": {
+          "ranges": [
+            {
+              "start_row": 2,
+              "end_row": 31
+            }
+          ],
+          "anchor_column": "A"
+        }
+      },
+      "filter": {
+        "op": "predicate.not_empty",
+        "args": {
+          "value": {
+            "op": "cell.column",
+            "args": {
+              "column": "D"
+            }
+          }
+        }
+      },
+      "context": {},
+      "extractors": [],
+      "fields": {
+        "date": {
+          "value": {
+            "source": {
+              "op": "cell.merged_origin",
+              "args": {
+                "column": "C",
+                "fallback": "nearest_non_empty_above"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.excel_serial_to_date",
+                "args": {
+                  "date_system": "inherit"
+                }
+              },
+              {
+                "op": "datetime.format_date",
+                "args": {
+                  "format": "%Y-%m-%d"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "time": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "D"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.regex_extract",
+                "args": {
+                  "pattern": "(?P<time>\\d{1,2}:\\d{2})",
+                  "group": "time"
+                }
+              },
+              {
+                "op": "datetime.parse_time",
+                "args": {
+                  "formats": [
+                    "%H:%M"
+                  ]
+                }
+              },
+              {
+                "op": "datetime.format_time",
+                "args": {
+                  "format": "%H:%M"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_a": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "F"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_b": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "J"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stage": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Main Event"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "bo": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "A"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "warning",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "match_label": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "B"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "warning",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "additional_fields": {
+        "round": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "B"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stream": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "E"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": null,
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "overrides": [],
+      "provenance": {
+        "enabled": true,
+        "include_source_coordinates": true,
+        "include_transform_chain": true,
+        "include_override_reason": true
+      }
+    }
+  ],
+  "normalization": {
+    "strings": {
+      "trim": true,
+      "collapse_internal_whitespace": true,
+      "replace_line_breaks_with_space": true,
+      "preserve_casing": true
+    },
+    "datetime": {
+      "precedence": [
+        "start_datetime",
+        "date_plus_time"
+      ],
+      "timezone_fallback": "tournament.base_timezone",
+      "dst_policy": "iana",
+      "utc_output_format": "%Y-%m-%dT%H:%M:%SZ",
+      "ambiguous_time_policy": "blocking_error",
+      "nonexistent_time_policy": "blocking_error"
+    },
+    "teams": {
+      "allow_placeholders": true,
+      "placeholder_values": [
+        "TBD",
+        "TBA"
+      ],
+      "placeholder_patterns": [
+        "^(Winner|Loser)\\s+M\\d+$",
+        "^Swiss\\s+#?\\d+\\s+Seed$",
+        "^Seed\\s+#?\\d+$",
+        "^Qualifier\\s+\\d+$",
+        "^Team\\s+\\d+\\s+\\(Playoff\\)$"
+      ]
+    },
+    "best_of": {
+      "normalize": true,
+      "output_format": "BO{n}"
+    }
+  },
+  "validation": {
+    "blocking_fields": [
+      "start_time_utc",
+      "team_a",
+      "team_b"
+    ],
+    "warning_fields": [
+      "stage",
+      "bo",
+      "match_label"
+    ],
+    "duplicate_check": {
+      "enabled": true,
+      "severity": "warning",
+      "fields": [
+        "start_time_utc",
+        "team_a",
+        "team_b"
+      ],
+      "team_order_sensitive": true
+    },
+    "record_count": {
+      "minimum": 30,
+      "maximum": 30,
+      "on_violation": "blocking_error"
+    },
+    "custom_rules": []
+  },
+  "output": {
+    "model": "neto.normalized_match.v1",
+    "columns": [
+      "date_original",
+      "time_original",
+      "timezone",
+      "start_time_utc",
+      "team_a",
+      "team_b",
+      "stage",
+      "bo",
+      "match_label",
+      "row_status"
+    ],
+    "csv_columns": [
+      "date_original",
+      "time_original",
+      "timezone",
+      "start_time_utc",
+      "team_a",
+      "team_b",
+      "stage",
+      "bo",
+      "match_label"
+    ],
+    "preserve_source_order": true,
+    "include_provenance_in_internal_result": true,
+    "sort": []
+  },
+  "extensions": {
+    "plugins": [],
+    "custom_config": {}
+  },
+  "metadata": {
+    "created_at": "2026-07-12T00:57:12Z",
+    "created_by": "NETO corpus design",
+    "updated_at": null,
+    "source_files": [
+      {
+        "filename": "[CCT 2026 Contenders EU6] Bracket, Schedule, Results — 🟩 PUBLIC.xlsx",
+        "sha256": "b0cfb245599fa2a285dd26ff37788208ae042c3a72dceae2043cff8ff2d1e37a"
+      }
+    ],
+    "notes": "Dates are vertically merged. The key resolves each row to the merged-range origin. Times contain the CEST suffix; the IANA timezone remains Europe/Berlin.",
+    "tags": [
+      "linear",
+      "merged_dates",
+      "timezone_suffix",
+      "future_teams_as_tbd"
+    ]
+  }
+}

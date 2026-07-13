@@ -1,0 +1,45 @@
+{
+  "schema_version": "neto.parser_key.v0",
+  "parser_key_id": "<unique_key_id>",
+  "key_name": "<human_readable_key_name>",
+  "status": "enabled",
+  "tournament": {
+    "name": "<tournament_name>",
+    "base_timezone": "<iana_timezone_name>",
+    "timezone_source": "parser_key"
+  },
+  "source_expectations": {
+    "file_type": "xlsx",
+    "target_sheet": "<sheet_name>",
+    "layout_type": "linear_table",
+    "columns_indexing": "excel_letters",
+    "rows_indexing": "excel_1_indexed"
+  },
+  "table": {
+    "header_row": 1,
+    "data_start_row": 2,
+    "read_until": {
+      "mode": "consecutive_empty_mapped_rows",
+      "empty_rows": 5
+    },
+    "empty_row_definition": "all_mapped_fields_empty_after_trim"
+  },
+  "field_mappings": {
+    "date": "<column_letter>",
+    "time": "<column_letter>",
+    "team_a": "<column_letter>",
+    "team_b": "<column_letter>",
+    "stage": null,
+    "bo": null,
+    "match_label": null
+  },
+  "forward_fill_rules": {
+    "date": true,
+    "stage": false,
+    "bo": false,
+    "match_label": false,
+    "team_a": false,
+    "team_b": false,
+    "time": false
+  }
+}

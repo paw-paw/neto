@@ -1,0 +1,29 @@
+{
+  "data": {
+    "esports": {
+      "events": [
+        {
+          "id": "riot-1",
+          "blockName": "Week 1",
+          "startTime": "2026-07-01T10:00:00Z",
+          "state": "unstarted",
+          "league": {"id": "league-a", "name": "VCT Test", "slug": "vct-test"},
+          "tournament": {"id": "tour-a", "name": "Stage 1"},
+          "matchTeams": [{"id": "team-a", "name": "Alpha"}, {"id": "team-b", "name": "Beta"}],
+          "match": {"id": "riot-1", "state": "unstarted", "strategy": {"type": "bestOf", "count": 3}}
+        },
+        {
+          "id": "riot-2",
+          "blockName": "Week 1",
+          "startTime": "2026-07-01T12:00:00Z",
+          "state": "completed",
+          "league": {"id": "league-b", "name": "Game Changers", "slug": "game-changers"},
+          "tournament": {"id": "tour-b", "name": "Finals"},
+          "matchTeams": [{"id": "team-c", "name": "Gamma"}, {"id": "team-d", "name": "Delta"}],
+          "match": {"id": "riot-2", "state": "completed", "strategy": {"type": "bestOf", "count": 5}}
+        }
+      ],
+      "pages": {"older": null, "newer": "next-page"}
+    }
+  }
+}

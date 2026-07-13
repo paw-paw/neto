@@ -1,0 +1,125 @@
+{
+  "schema_version": "neto.parser_key.v0",
+  "parser_key_id": "cct_2026_sa3_public_schedule_v1",
+  "key_name": "CCT 2026 SA3 Public Schedule Key",
+  "status": "enabled",
+  "tournament": {
+    "name": "CCT 2026 South America Series 3",
+    "base_timezone": "America/Lima",
+    "timezone_source": "parser_key"
+  },
+  "source_expectations": {
+    "file_type": "xlsx",
+    "target_sheet": "Schedule",
+    "layout_type": "linear_table",
+    "columns_indexing": "excel_letters",
+    "rows_indexing": "excel_1_indexed"
+  },
+  "table": {
+    "header_row": 1,
+    "data_start_row": 2,
+    "read_until": {
+      "mode": "consecutive_empty_mapped_rows",
+      "empty_rows": 5
+    },
+    "empty_row_definition": "all_mapped_fields_empty_after_trim"
+  },
+  "field_mappings": {
+    "bo": "A",
+    "stage": "B",
+    "match_label": "C",
+    "date": "D",
+    "time": "E",
+    "team_a": "G",
+    "team_b": "K"
+  },
+  "auxiliary_mappings": {
+    "source_start_time_check": "F",
+    "team_a_match_score": "H",
+    "team_b_match_score": "J",
+    "notes": "V"
+  },
+  "forward_fill_rules": {
+    "date": true,
+    "stage": false,
+    "bo": false,
+    "match_label": false,
+    "team_a": false,
+    "team_b": false,
+    "time": false
+  },
+  "parsing_rules": {
+    "trim_strings": true,
+    "collapse_internal_whitespace": true,
+    "preserve_casing": true,
+    "line_breaks": "replace_with_space",
+    "date_format": "auto",
+    "time_format": "auto",
+    "datetime_source": "date_column_plus_time_column",
+    "timezone_source": "parser_key",
+    "excel_date_system": "1900",
+    "time_column_semantics": "local_time"
+  },
+  "validation_rules": {
+    "blocking_fields": ["date", "time", "timezone", "team_a", "team_b"],
+    "warning_fields": ["stage", "bo", "match_label"],
+    "allow_explicit_placeholders": true,
+    "valid_placeholders": [
+      "TBD",
+      "TBA",
+      "Winner Match 1",
+      "Winner Match 2",
+      "Loser Match 1",
+      "Loser Match 2",
+      "Seed #1",
+      "Seed #2",
+      "Qualifier 1",
+      "Qualifier 2"
+    ],
+    "duplicate_check": {
+      "enabled": true,
+      "severity": "warning",
+      "fields": ["start_time_utc", "team_a", "team_b"]
+    }
+  },
+  "output": {
+    "columns": [
+      "date_original",
+      "time_original",
+      "timezone",
+      "start_time_utc",
+      "team_a",
+      "team_b",
+      "stage",
+      "bo",
+      "match_label",
+      "row_status"
+    ],
+    "csv_columns": [
+      "date_original",
+      "time_original",
+      "timezone",
+      "start_time_utc",
+      "team_a",
+      "team_b",
+      "stage",
+      "bo",
+      "match_label"
+    ]
+  },
+  "metadata": {
+    "created_at": "2026-07-09T00:00:00Z",
+    "created_by": "ChatGPT + Paulo Tuya",
+    "source_schedule_file": "[CCT 2026 SA3] Bracket, Schedule, Results — 🟩 PUBLIC.xlsx",
+    "source_workbook_sheets": ["General", "Bracket", "Schedule", "Data"],
+    "source_schedule_range": "Schedule!A1:V49",
+    "source_event_name_cell": "General!D3",
+    "timezone_inference_note": "Workbook has Schedule!F Start Time = Schedule!E Local Time + Data!A13. Data!A13 is 05:00, so Local Time appears to be UTC-05:00. ParserKey uses America/Lima as IANA timezone. Operator should confirm if the intended local timezone is another UTC-05 zone.",
+    "parse_sanity_check": {
+      "non_empty_mapped_rows_detected": 48,
+      "first_match_expected_utc": "2026-06-27T15:00:00Z",
+      "last_match_expected_utc": "2026-07-09T23:00:00Z"
+    },
+    "notes": "MVP key for linear Schedule sheet. Uses column E Local Time + base timezone for UTC normalization. Column F Start Time is retained only as an auxiliary check, not as primary parse input. Scores and map scores are out of MVP output."
+  }
+}
