@@ -23,6 +23,7 @@ from .datetime_utils import (
 from .models import ParseResult, ParsedMatch, ParserKey, ValidationIssue
 from .parser_keys import FIELDS, TEAM_FIELDS
 from .validation import finalize_parse_result
+from .workbook_security import WorkbookSafetyError, validate_xlsx_archive
 
 
 EMPTY_ROW_LIMIT = 5
@@ -344,6 +345,11 @@ def _timezone_notice(parser_key: ParserKey) -> str:
 
 def parse_workbook(file_bytes: bytes, parser_key: ParserKey) -> ParseResult:
     """Parse an uploaded XLSX and return a complete, non-raising ParseResult."""
+
+    try:
+        validate_xlsx_archive(file_bytes)
+    except WorkbookSafetyError as exc:
+        return ParseResult.failed(str(exc))
 
     if parser_key.schema_version == "neto.parser_key.v2":
         from .v2_runtime import parse_workbook_v2
