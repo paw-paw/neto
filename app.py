@@ -18,15 +18,25 @@ from official_web import (
     fetch_official_schedule,
     list_official_sources,
 )
-from parser import load_parser_keys, parse_workbook
+from parser import (
+    fingerprint_workbook,
+    load_parser_keys,
+    normalize_parser_key,
+    parse_workbook,
+    rank_parser_keys,
+    validate_parser_key_upload,
+)
 from parser.export import issues_dataframe
 from parser.models import ParseResult, ParserKey
+from parser.registration import ParserKeyRegistrationError
 from parser.presentation import (
     canonical_view_dataframe,
     presentation_dataframe,
-    timezone_difference_label,
 )
+from parser.suggestions import ParserKeySuggestion, WorkbookFingerprintError
 from parser.ui_exports import canonical_csv_bytes, markdown_bytes, pdf_bytes, xlsx_bytes
+from wiki_ingestion import fetch_tournament_schedule, parse_tournament_url
+from wiki_ingestion.errors import TournamentUrlError
 
 
 APP_ROOT = Path(__file__).resolve().parent
@@ -45,6 +55,10 @@ FONT_ASSETS = {
     / "fonts"
     / "DMSans-Regular-Medium.woff2",
 }
+PARSERKEY_CREATOR_URL = (
+    "https://chatgpt.com/g/g-6a579fdaa2948191b59a59f34f8f688d-"
+    "neto-parserkey-creator"
+)
 
 
 def _data_uri(path: Path, mime_type: str) -> str:
@@ -112,6 +126,12 @@ class _OfficialFetchFailed(RuntimeError):
         self.result = result
 
 
+class _WikiFetchFailed(RuntimeError):
+    def __init__(self, result: ParseResult) -> None:
+        super().__init__(result.technical_error or "Tournament schedule fetch failed.")
+        self.result = result
+
+
 @st.cache_data(ttl=300, max_entries=64, show_spinner=False)
 def _cached_fetch_official(
     source_id: str,
@@ -130,6 +150,37 @@ def _cached_fetch_official(
     if result.status == "failed":
         raise _OfficialFetchFailed(result)
     return result
+
+
+@st.cache_data(ttl=3600, max_entries=64, show_spinner=False)
+def _cached_fetch_tournament(
+    url: str,
+) -> ParseResult:
+    result = fetch_tournament_schedule(url)
+    if result.status == "failed":
+        raise _WikiFetchFailed(result)
+    return result
+
+
+@st.cache_data(max_entries=16, show_spinner=False)
+def _cached_workbook_fingerprint(file_bytes: bytes, file_name: str):
+    return fingerprint_workbook(file_bytes, file_name)
+
+
+def _session_parser_keys() -> list[ParserKey]:
+    registered = st.session_state.get("neto_registered_parser_keys", {})
+    if not isinstance(registered, dict):
+        return []
+    keys: list[ParserKey] = []
+    for parser_key_id, raw_data in registered.items():
+        if not isinstance(raw_data, dict):
+            continue
+        try:
+            key = normalize_parser_key(raw_data, source_file=f"session:{parser_key_id}")
+        except ValueError:
+            continue
+        keys.append(key)
+    return keys
 
 
 def _download_filename(uploaded_name: str, parser_key_id: str, extension: str) -> str:
@@ -164,7 +215,7 @@ def _preview_style(dataframe: pd.DataFrame) -> pd.io.formats.style.Styler:
 def _presentation_dataframe(
     result: ParseResult,
     *,
-    descending: bool = False,
+    descending: bool = True,
     search: str = "",
     stages: list[str] | None = None,
     bos: list[str] | None = None,
@@ -232,6 +283,93 @@ def _render_key_summary(parser_key: ParserKey) -> None:
     st.caption(f"Layout · {parser_key.layout_type}")
 
 
+def _render_suggestions(suggestions: list[ParserKeySuggestion]) -> None:
+    st.markdown("**Structural matches**")
+    if not suggestions:
+        st.info("No ParserKeys are available to rank.")
+        return
+    strongest = suggestions[0]
+    if strongest.confidence == "Low":
+        st.warning(
+            "No confident ParserKey match was found. Review the best available candidates manually."
+        )
+    else:
+        st.success(
+            f"Recommended · {strongest.parser_key.key_name} · "
+            f"{strongest.confidence} confidence"
+        )
+    for index, suggestion in enumerate(suggestions, start=1):
+        label = (
+            "Recommended"
+            if index == 1 and suggestion.confidence != "Low"
+            else ("Best available" if index == 1 else f"Candidate {index}")
+        )
+        st.markdown(
+            f"**{label}:** {suggestion.parser_key.key_name} "
+            f"· {suggestion.confidence} ({suggestion.score}/100)"
+        )
+        st.caption(" · ".join(suggestion.reasons) or "No strong structural signals.")
+
+
+def _render_registration_notice() -> None:
+    notice = st.session_state.pop("neto_registration_notice", None)
+    if not isinstance(notice, dict):
+        return
+    message = str(notice.get("message") or "")
+    st.success(message)
+
+
+def _render_parser_key_registration(existing_keys: list[ParserKey]) -> None:
+    with st.expander("Create or upload a ParserKey"):
+        st.caption(
+            "Upload the XLSX to the NETO ParserKey Creator, download its JSON, "
+            "then return here and upload that ParserKey."
+        )
+        st.link_button(
+            "Open NETO ParserKey Creator",
+            PARSERKEY_CREATOR_URL,
+            width="stretch",
+        )
+        parser_key_file = st.file_uploader(
+            "Upload ParserKey JSON",
+            type=["json"],
+            accept_multiple_files=False,
+            max_upload_size=1,
+            key="parser_key_upload",
+        )
+        st.caption(
+            "Temporary registration only: the key is available in this browser session "
+            "and is discarded when the session or app restarts."
+        )
+
+        if st.button(
+            "Validate and register",
+            key="register_parser_key",
+            disabled=parser_key_file is None,
+            width="stretch",
+        ):
+            try:
+                validated = validate_parser_key_upload(
+                    parser_key_file.getvalue(),
+                    source_file=parser_key_file.name,
+                    existing_keys=existing_keys,
+                )
+                registered = dict(
+                    st.session_state.get("neto_registered_parser_keys", {})
+                )
+                registered[validated.parser_key.parser_key_id] = validated.parser_key.raw_data
+                st.session_state["neto_registered_parser_keys"] = registered
+                st.session_state["neto_registration_notice"] = {
+                    "message": (
+                        f"{validated.parser_key.key_name} validated and available "
+                        "for this session."
+                    ),
+                }
+                st.rerun()
+            except ParserKeyRegistrationError as exc:
+                st.error(str(exc))
+
+
 def _render_status(result: ParseResult) -> None:
     messages = {
         "parsed": (st.success, "Parse completed successfully."),
@@ -247,7 +385,11 @@ def _render_status(result: ParseResult) -> None:
     }
     renderer, message = messages.get(result.status, (st.info, result.status))
     if result.ingestion and result.ingestion.legitimate_empty:
-        renderer, message = st.info, "The official source returned no matches for this range."
+        renderer, message = st.info, (
+            "No schedule was found for this tournament page."
+            if result.ingestion.method == "wiki_tournament"
+            else "The official source returned no matches for this range."
+        )
     renderer(message)
 
     metrics = (
@@ -277,7 +419,7 @@ def _render_status(result: ParseResult) -> None:
             f"`{ingestion.strategy}`"
         )
         st.caption(
-            f"Fetched {ingestion.fetched_at_utc} · {ingestion.request_count} official request(s)"
+            f"Fetched {ingestion.fetched_at_utc} · {ingestion.request_count} API request(s)"
         )
         state_counts: dict[str, int] = {}
         for match in result.matches:
@@ -357,10 +499,13 @@ def _render_export(
     )
     if result and result.ingestion:
         ingestion = result.ingestion
-        base_args = (
-            f"{ingestion.source_id}_{ingestion.range_start}_{ingestion.range_end}.xlsx",
-            "official",
-        )
+        if ingestion.method == "wiki_tournament":
+            base_args = (f"{ingestion.source_id}_tournament.xlsx", "wiki")
+        else:
+            base_args = (
+                f"{ingestion.source_id}_{ingestion.range_start}_{ingestion.range_end}.xlsx",
+                "official",
+            )
     elif uploaded_file is not None and selected_key is not None:
         base_args = (uploaded_file.name, selected_key.parser_key_id)
     else:
@@ -417,17 +562,11 @@ def _table_context(
     *,
     visible: int,
     total: int,
-    date_format: str,
-    display_timezone: str,
     schedule_timezone: str,
-    difference: str,
 ) -> None:
     items = (
         ("Visible matches", f"{visible} / {total}"),
-        ("Date format", date_format),
-        ("View timezone", display_timezone),
         ("Schedule timezone", schedule_timezone or "—"),
-        ("Timezone difference", difference),
     )
     cards = "".join(
         (
@@ -455,62 +594,32 @@ def _render_match_table(
         return empty, presentation_dataframe(empty)
 
     all_rows = canonical_view_dataframe(result)
-    is_official = bool(result.ingestion and result.ingestion.method == "official_web")
+    has_source_metadata = bool(
+        result.ingestion
+        and result.ingestion.method in {"official_web", "wiki_tournament"}
+    )
     schedule_timezone = (
-        "UTC" if is_official else (selected_key.base_timezone if selected_key else "UTC")
+        "UTC"
+        if has_source_metadata
+        else (selected_key.base_timezone if selected_key else "UTC")
     )
-    timezone_options = list(
-        dict.fromkeys(
-            filter(
-                None,
-                (
-                    schedule_timezone,
-                    "America/Lima",
-                    "UTC",
-                    "Europe/Berlin",
-                    "Europe/Madrid",
-                    "Asia/Shanghai",
-                    "America/Sao_Paulo",
-                ),
-            )
-        )
-    )
-    default_timezone = (
-        timezone_options.index("America/Lima")
-        if "America/Lima" in timezone_options
-        else 0
-    )
-
-    control_columns = st.columns([1.2, 0.85, 1.1, 1.8], gap="small")
+    control_columns = st.columns([1.2, 1.8], gap="small")
     with control_columns[0]:
         sort_order = st.segmented_control(
             "Sort by start time",
             options=["↑ Ascending", "↓ Descending"],
-            default="↑ Ascending",
+            default="↓ Descending",
             key="preview_sort_order",
             width="stretch",
         )
     with control_columns[1]:
-        date_format = st.selectbox(
-            "Date format",
-            options=["DD-MM-YYYY", "MM-DD-YYYY", "YYYY-MM-DD"],
-            key="preview_date_format",
-        )
-    with control_columns[2]:
-        display_timezone = st.selectbox(
-            "View timezone",
-            options=timezone_options,
-            index=default_timezone,
-            key="preview_timezone",
-        )
-    with control_columns[3]:
         search = st.text_input(
             "Search matches",
             placeholder="Team, stage, or match label",
             key="preview_search",
         )
 
-    filter_columns = st.columns(5 if is_official else 3, gap="small")
+    filter_columns = st.columns(4 if has_source_metadata else 2, gap="small")
     with filter_columns[0]:
         stages = st.multiselect(
             "Stage",
@@ -519,13 +628,6 @@ def _render_match_table(
             key="preview_stage",
         )
     with filter_columns[1]:
-        bos = st.multiselect(
-            "Best of",
-            options=_non_empty_options(all_rows, "bo"),
-            placeholder="All formats",
-            key="preview_bo",
-        )
-    with filter_columns[2]:
         statuses = st.multiselect(
             "Row status",
             options=_non_empty_options(all_rows, "row_status"),
@@ -534,15 +636,15 @@ def _render_match_table(
         )
     competitions: list[str] = []
     match_states: list[str] = []
-    if is_official:
-        with filter_columns[3]:
+    if has_source_metadata:
+        with filter_columns[2]:
             competitions = st.multiselect(
                 "Competition",
                 options=_non_empty_options(all_rows, "_competition"),
                 placeholder="All competitions",
                 key="preview_competition",
             )
-        with filter_columns[4]:
+        with filter_columns[3]:
             match_states = st.multiselect(
                 "Match state",
                 options=_non_empty_options(all_rows, "_match_state"),
@@ -555,25 +657,15 @@ def _render_match_table(
         descending=sort_order == "↓ Descending",
         search=search,
         stages=stages,
-        bos=bos,
         statuses=statuses,
         competitions=competitions,
         match_states=match_states,
     )
-    presentation = presentation_dataframe(
-        canonical,
-        date_format=date_format,
-        display_timezone=display_timezone,
-    )
+    presentation = presentation_dataframe(canonical)
     _table_context(
         visible=len(canonical),
         total=len(result.matches),
-        date_format=date_format,
-        display_timezone=display_timezone,
         schedule_timezone=schedule_timezone,
-        difference=timezone_difference_label(
-            canonical, schedule_timezone, display_timezone
-        ),
     )
 
     if canonical.empty:
@@ -586,8 +678,8 @@ def _render_match_table(
         column_config=_preview_column_config(),
         key="matches_preview",
     )
-    if is_official:
-        with st.expander(f"Official match metadata ({len(canonical)})"):
+    if has_source_metadata:
+        with st.expander(f"Source match metadata ({len(canonical)})"):
             metadata = canonical[
                 [
                     "_official_match_id",
@@ -610,7 +702,7 @@ def _render_match_table(
                 hide_index=True,
                 width="stretch",
                 column_config={
-                    "source_url": st.column_config.LinkColumn("Official source")
+                    "source_url": st.column_config.LinkColumn("Source page")
                 },
                 key="official_match_metadata",
             )
@@ -621,17 +713,26 @@ def main() -> None:
     st.set_page_config(page_title="NETO v0", page_icon=str(LOGO_PATH), layout="wide")
     st.markdown(_load_app_styles(), unsafe_allow_html=True)
     _render_brand_header()
+    _render_registration_notice()
 
     ingestion_mode = st.segmented_control(
         "Ingestion method",
-        options=["XLSX Upload", "Official Website"],
+        options=["XLSX Upload", "Official Website", "Tournament Page"],
         default="XLSX Upload",
         key="ingestion_mode",
         width="content",
     )
 
     catalog = load_parser_keys(PARSER_KEYS_DIR)
-    key_by_id = {key.parser_key_id: key for key in catalog.keys}
+    repository_ids = {key.parser_key_id for key in catalog.keys}
+    session_keys = [
+        key for key in _session_parser_keys() if key.parser_key_id not in repository_ids
+    ]
+    available_keys = sorted(
+        [*catalog.keys, *session_keys],
+        key=lambda key: (key.key_name.casefold(), key.parser_key_id.casefold()),
+    )
+    key_by_id = {key.parser_key_id: key for key in available_keys}
     official_sources = list_official_sources()
     official_by_id = {source.source_id: source for source in official_sources}
 
@@ -645,6 +746,10 @@ def main() -> None:
     official_end: date | None = None
     range_timezone = "America/Lima"
     official_range_valid = False
+    parser_key_confirmed = False
+    tournament_url = ""
+    tournament_page = None
+    tournament_ready = False
 
     with st.container(key="top_workflow"):
         first_column, second_column, run_column = st.columns(
@@ -658,6 +763,7 @@ def main() -> None:
                     "Upload an esports schedule",
                     type=["xlsx"],
                     accept_multiple_files=False,
+                    max_upload_size=25,
                     key="schedule_upload",
                 )
                 file_bytes = (
@@ -667,9 +773,42 @@ def main() -> None:
                     st.caption("No file uploaded.")
                 else:
                     st.success(f"Loaded · {uploaded_file.name}")
+                _render_parser_key_registration(available_keys)
 
             with second_column:
                 st.subheader("2. Select ParserKey")
+                suggestions: list[ParserKeySuggestion] = []
+                if file_bytes is not None:
+                    try:
+                        fingerprint = _cached_workbook_fingerprint(
+                            file_bytes, uploaded_file.name
+                        )
+                        suggestions = rank_parser_keys(
+                            fingerprint, available_keys, limit=3
+                        )
+                        _render_suggestions(suggestions)
+                    except WorkbookFingerprintError as exc:
+                        st.warning(str(exc))
+
+                recommended_id = (
+                    suggestions[0].parser_key.parser_key_id
+                    if suggestions and suggestions[0].confidence != "Low"
+                    else None
+                )
+                workbook_signature = hashlib.sha256(file_bytes or b"").hexdigest()
+                if (
+                    st.session_state.get("neto_suggestion_workbook_signature")
+                    != workbook_signature
+                ):
+                    st.session_state["neto_suggestion_workbook_signature"] = (
+                        workbook_signature
+                    )
+                    if recommended_id:
+                        st.session_state["parser_key_select"] = recommended_id
+                    else:
+                        st.session_state.pop("parser_key_select", None)
+                    st.session_state["parser_key_confirm"] = False
+                    st.session_state.pop("neto_confirmation_key", None)
                 selected_key_id = st.selectbox(
                     "ParserKey",
                     options=list(key_by_id),
@@ -695,7 +834,15 @@ def main() -> None:
                     _render_key_summary(selected_key)
                 else:
                     st.caption("Choose the configuration matching this workbook.")
-        else:
+                if st.session_state.get("neto_confirmation_key") != selected_key_id:
+                    st.session_state["neto_confirmation_key"] = selected_key_id
+                    st.session_state["parser_key_confirm"] = False
+                parser_key_confirmed = st.checkbox(
+                    "I confirm this ParserKey for the uploaded workbook",
+                    disabled=selected_key is None,
+                    key="parser_key_confirm",
+                )
+        elif ingestion_mode == "Official Website":
             with first_column:
                 st.subheader("1. Official Source")
                 selected_source_id = st.selectbox(
@@ -742,6 +889,35 @@ def main() -> None:
                         st.error("Choose an inclusive range of 1 to 90 days.")
                 else:
                     st.caption("Select both a start and end date.")
+        else:
+            with first_column:
+                st.subheader("1. Tournament Page")
+                tournament_url = st.text_input(
+                    "Tournament-page URL",
+                    placeholder="https://lol.fandom.com/wiki/...",
+                    key="tournament_page_url",
+                ).strip()
+                if tournament_url:
+                    try:
+                        tournament_page = parse_tournament_url(tournament_url)
+                    except TournamentUrlError as exc:
+                        st.error(str(exc))
+                    else:
+                        st.success(
+                            f"Supported · Leaguepedia · {tournament_page.game_label}"
+                        )
+                        st.caption(f"Page · {tournament_page.title}")
+                        tournament_ready = True
+
+            with second_column:
+                st.subheader("2. Provider Details")
+                st.markdown("- Leaguepedia / LoL Fandom")
+                st.caption(
+                    "All published matches are requested · successful responses cached for 1 hour"
+                )
+                st.caption(
+                    "Preliminary release: Liquipedia ingestion is intentionally disabled."
+                )
 
     signature_extra = ingestion_mode
     if ingestion_mode == "Official Website":
@@ -754,17 +930,16 @@ def main() -> None:
                 range_timezone,
             )
         )
+    elif ingestion_mode == "Tournament Page":
+        signature_extra = f"{ingestion_mode}|{tournament_url}"
     signature = _input_signature(file_bytes, selected_key_id, signature_extra)
     if st.session_state.get("neto_input_signature") != signature:
         st.session_state["neto_input_signature"] = signature
         st.session_state.pop("neto_parse_result", None)
         for widget_key in (
             "preview_sort_order",
-            "preview_date_format",
-            "preview_timezone",
             "preview_search",
             "preview_stage",
-            "preview_bo",
             "preview_status",
             "preview_competition",
             "preview_match_state",
@@ -773,38 +948,52 @@ def main() -> None:
 
     with run_column:
         is_official_mode = ingestion_mode == "Official Website"
-        st.subheader("3. Fetch Schedule" if is_official_mode else "3. Run Parse")
-        can_parse = (
-            selected_source is not None and official_range_valid
-            if is_official_mode
-            else file_bytes is not None and selected_key is not None
+        is_tournament_mode = ingestion_mode == "Tournament Page"
+        st.subheader(
+            "3. Fetch Schedule"
+            if is_official_mode or is_tournament_mode
+            else "3. Run Parse"
         )
-        readiness = (
-            (
+        if is_official_mode:
+            can_parse = selected_source is not None and official_range_valid
+            readiness = (
                 (selected_source is not None, "Official source"),
                 (official_range_valid, "Date range"),
             )
-            if is_official_mode
-            else (
-                (file_bytes is not None, "XLSX file"),
-                (selected_key is not None, "ParserKey"),
+        elif is_tournament_mode:
+            can_parse = tournament_page is not None and tournament_ready
+            readiness = (
+                (tournament_page is not None, "Supported URL"),
+                (tournament_ready, "Provider API ready"),
             )
-        )
+        else:
+            can_parse = (
+                file_bytes is not None
+                and selected_key is not None
+                and parser_key_confirmed
+            )
+            readiness = (
+                (file_bytes is not None, "XLSX file"),
+                (selected_key is not None, "ParserKey selected"),
+                (parser_key_confirmed, "ParserKey confirmed"),
+            )
         for ready, label in readiness:
             st.markdown(
                 f'<div class="neto-ready-line">{"✅" if ready else "○"} {label}</div>',
                 unsafe_allow_html=True,
             )
         if st.button(
-            "Fetch Schedule" if is_official_mode else "Run Parse",
+            "Fetch Schedule"
+            if is_official_mode or is_tournament_mode
+            else "Run Parse",
             type="primary",
             disabled=not can_parse,
             key="run_parse",
             width="stretch",
         ):
             with st.spinner(
-                "Fetching official schedule..."
-                if is_official_mode
+                "Fetching schedule..."
+                if is_official_mode or is_tournament_mode
                 else "Parsing schedule..."
             ):
                 if is_official_mode:
@@ -816,6 +1005,12 @@ def main() -> None:
                             range_timezone,
                         )
                     except _OfficialFetchFailed as exc:
+                        fetched_result = exc.result
+                    st.session_state["neto_parse_result"] = fetched_result
+                elif is_tournament_mode:
+                    try:
+                        fetched_result = _cached_fetch_tournament(tournament_url)
+                    except _WikiFetchFailed as exc:
                         fetched_result = exc.result
                     st.session_state["neto_parse_result"] = fetched_result
                 else:

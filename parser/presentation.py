@@ -29,7 +29,7 @@ PRESENTATION_COLUMNS: tuple[str, ...] = (
 def canonical_view_dataframe(
     result: ParseResult,
     *,
-    descending: bool = False,
+    descending: bool = True,
     search: str = "",
     stages: Iterable[str] | None = None,
     bos: Iterable[str] | None = None,

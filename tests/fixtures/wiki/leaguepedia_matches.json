@@ -1,0 +1,34 @@
+{
+  "cargoquery": [
+    {
+      "title": {
+        "MatchId": "LJL2026SUMMER_001",
+        "DateTimeUTC": "2026-07-17 09:00:00",
+        "Team1": "Fukuoka SoftBank HAWKS gaming",
+        "Team2": "Burning Core Toyama",
+        "BestOf": "5",
+        "Phase": "Playoffs",
+        "Round": "Round 1",
+        "Tab": "Bracket",
+        "HasTime": "1",
+        "Winner": "",
+        "OverviewPage": "LJL/2026 Season/Summer Championship"
+      }
+    },
+    {
+      "title": {
+        "MatchId": "LJL2026SUMMER_002",
+        "DateTimeUTC": "2026-07-18 00:00:00",
+        "Team1": "TBD",
+        "Team2": "TBD",
+        "BestOf": "5",
+        "Phase": "Playoffs",
+        "Round": "Round 2",
+        "Tab": "Bracket",
+        "HasTime": "0",
+        "Winner": "",
+        "OverviewPage": "LJL/2026 Season/Summer Championship"
+      }
+    }
+  ]
+}
