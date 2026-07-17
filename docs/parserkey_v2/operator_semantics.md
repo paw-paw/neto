@@ -90,14 +90,27 @@ such as `10:00`.
 
 The runtime does not evaluate arbitrary Excel or Google Sheets formulas.
 
-- `cached_value_only`: read the cached result stored in the XLSX;
-- `first_available`: try cached value, raw value, then display value;
-- if a required cached value is absent, emit the configured warning/error.
+- A cached scalar value is used as supplied by the XLSX.
+- Without a cache, the runtime may resolve only a direct A1 cell reference, on the
+  current sheet or another workbook sheet, with optional `$` markers. Direct
+  reference chains are followed for at most eight levels and cycles are detected.
+- Functions, ranges, external workbook references, named ranges, array formulas,
+  and every other formula form remain unresolved.
+- Formula text and OpenPyXL objects never become normalized match values. The
+  original formula is retained only in field provenance.
+- `formula_cached_value_missing` follows the workbook policy and explains whether
+  a direct reference was resolved or an explicit `TBD` policy was used.
 
 ## Fallbacks and defaults
 
 A value pipeline's `fallbacks` are attempted in order when the primary source resolves to null/empty.
 `on_missing = use_default` emits the field's `default`.
+
+Formula-cache diagnostics survive a successful fallback or default. `TBD` is not a
+generic substitute for missing data: it is emitted only when the field explicitly
+declares `on_missing = use_default` with `default = TBD`, or an equivalent declared
+fallback. A pending `TBD`/`TBA` time produces `time_pending`, leaves both local time
+and UTC empty, and remains exportable with a warning.
 
 ## Overrides
 
@@ -114,6 +127,16 @@ For every extracted field, internal results should retain:
 - record set;
 - transform chain;
 - fallback/default/override usage.
+- original formula, direct-reference target/result, and fallback reason when a
+  formula cache is missing.
+
+## Validation behavior
+
+- `record_count.minimum` and `maximum` are independent nullable bounds.
+  `on_violation` controls whether drift is a warning or blocking error.
+- Duplicate grouping uses only `duplicate_check.fields`, honors its severity and
+  `team_order_sensitive`, and skips a comparison only when both participants match
+  placeholders declared by `normalization.teams`.
 
 ## Regression rule
 
@@ -121,5 +144,5 @@ A ParserKey passes its basic regression test only when:
 
 1. it validates against `neto_parserkey_v2.schema.json`;
 2. every required operator exists in `neto_operator_catalog_v1.json`;
-3. parsed record count equals the key's exact `validation.record_count`;
+3. record-count drift follows the key's declared severity;
 4. all manifest smoke checks match.
