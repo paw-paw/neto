@@ -25,11 +25,11 @@ def compose_stage(*parts: object) -> str:
     values: list[str] = []
     seen: set[str] = set()
     for part in parts:
-        value = normalize_text(part)
-        marker = value.casefold()
-        if value and marker not in seen:
-            values.append(value)
-            seen.add(marker)
+        for value in normalize_text(part).split(" · "):
+            marker = value.casefold()
+            if value and marker not in seen:
+                values.append(value)
+                seen.add(marker)
     return " · ".join(values)
 
 
@@ -113,6 +113,12 @@ def finish_official_result(
     warning_specs: dict[str, list[tuple[str, str, str | None]]],
     conflict_ids: set[str] | None = None,
 ) -> ParseResult:
+    for match in matches:
+        if match.official:
+            match.stage = compose_stage(
+                match.official.competition_name,
+                match.stage,
+            )
     matches.sort(key=lambda match: (match.start_time_utc, match.official.match_id if match.official else ""))
     issues: list[ValidationIssue] = []
     for row_number, match in enumerate(matches, start=1):
