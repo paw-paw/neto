@@ -67,15 +67,9 @@ def _normalized_text(cell: _CellValue) -> str:
     return str(value).strip()
 
 
-def _formula_display(cell: _CellValue) -> str:
-    if not cell.formula_text:
-        return ""
-    return cell.formula_text if cell.formula_text.startswith("=") else f"={cell.formula_text}"
-
-
 def _date_display(cell: _CellValue) -> str:
     if cell.formula_without_cache:
-        return _formula_display(cell)
+        return ""
     value = cell.value
     if value is None:
         return ""
@@ -88,7 +82,7 @@ def _date_display(cell: _CellValue) -> str:
 
 def _time_display(cell: _CellValue) -> str:
     if cell.formula_without_cache:
-        return _formula_display(cell)
+        return ""
     value = cell.value
     if value is None:
         return ""
@@ -279,18 +273,37 @@ def _parse_match(
     bo = _normalized_text(row["bo"])
     match_label = _normalized_text(row["match_label"])
 
-    if not team_a:
-        issues.append(
-            _issue(
-                row_number, "blocking_error", "missing_team_a", "team_a", "Team A is required."
+    empty_participant_policy = parser_key.raw_data.get("validation_rules", {}).get(
+        "empty_participant_policy", "blocking_error"
+    )
+    team_values = {"team_a": team_a, "team_b": team_b}
+    for field_name in ("team_a", "team_b"):
+        if team_values[field_name]:
+            continue
+        if empty_participant_policy == "use_tbd":
+            team_values[field_name] = "TBD"
+            if row[field_name].formula_without_cache:
+                issues.append(
+                    _issue(
+                        row_number,
+                        "warning",
+                        "formula_cached_value_missing",
+                        field_name,
+                        "Participant formula has no cached value; explicit key policy used TBD.",
+                    )
+                )
+        else:
+            issues.append(
+                _issue(
+                    row_number,
+                    "blocking_error",
+                    f"missing_{field_name}",
+                    field_name,
+                    f"{field_name.replace('_', ' ').title()} is required.",
+                )
             )
-        )
-    if not team_b:
-        issues.append(
-            _issue(
-                row_number, "blocking_error", "missing_team_b", "team_b", "Team B is required."
-            )
-        )
+    team_a = team_values["team_a"]
+    team_b = team_values["team_b"]
 
     for field_name, value, code, label in (
         ("stage", stage, "stage_missing", "Stage"),

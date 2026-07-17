@@ -335,6 +335,18 @@ def normalize_parser_key(data: dict[str, Any], source_file: str | None = None) -
             )
         forward_fill_rules[field_name] = value
 
+    validation_rules = data.get("validation_rules", {})
+    if not isinstance(validation_rules, dict):
+        raise ParserKeyValidationError('Field "validation_rules" must be an object.')
+    empty_participant_policy = validation_rules.get(
+        "empty_participant_policy", "blocking_error"
+    )
+    if empty_participant_policy not in {"blocking_error", "use_tbd"}:
+        raise ParserKeyValidationError(
+            'validation_rules.empty_participant_policy must be "blocking_error" '
+            'or "use_tbd".'
+        )
+
     return ParserKey(
         parser_key_id=parser_key_id,
         key_name=key_name,
