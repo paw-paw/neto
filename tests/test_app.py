@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from openpyxl import load_workbook
@@ -19,6 +20,8 @@ from parser.models import (
     OfficialMatchMetadata,
     ParseResult,
     ParsedMatch,
+    ParserKeyCatalog,
+    parser_key_status,
 )
 from parser.presentation import canonical_view_dataframe, presentation_dataframe
 from parser.ui_exports import canonical_csv_bytes, markdown_bytes, pdf_bytes, xlsx_bytes
@@ -34,6 +37,11 @@ def _download_states(app_test: AppTest) -> list[bool]:
     elements = app_test.get("download_button")
     assert len(elements) == 4
     return [bool(element.proto.disabled) for element in elements]
+
+
+def _select_ingestion_mode(app_test: AppTest, label: str) -> None:
+    app_test.session_state["ingestion_mode"] = label
+    app_test.run()
 
 
 def test_preview_uses_natural_columns_and_sorts_by_utc() -> None:
@@ -167,6 +175,9 @@ def test_streamlit_upload_parse_preview_and_export_gating() -> None:
     assert preview.iloc[0]["date"] == "09-07-2026"
     assert preview.iloc[0]["time"] == "18:00"
     assert app_test.segmented_control(key="preview_sort_order").value == "↓ Descending"
+    assert app_test.multiselect(key="preview_stage")
+    assert app_test.multiselect(key="preview_status")
+    assert "More filters" not in [item.label for item in app_test.expander]
     app_test.segmented_control(key="preview_sort_order").select("↑ Ascending").run()
     ascending_preview = app_test.dataframe[0].value
     assert ascending_preview.iloc[0]["date"] == "27-06-2026"
@@ -225,16 +236,51 @@ def test_streamlit_google_sheet_reuses_workbook_parse_flow(monkeypatch) -> None:
     assert not any(_download_states(app_test))
 
 
-def test_ingestion_methods_have_individual_help_and_timezones_are_searchable() -> None:
+def test_google_sheet_suggestions_accept_legacy_parserkey_instances(monkeypatch) -> None:
+    fixture = (
+        ROOT / "tests" / "fixtures" / "cct_2026_sa3_public_schedule.xlsx"
+    ).read_bytes()
+    url = (
+        "https://docs.google.com/spreadsheets/d/"
+        "1ouauktbqfjv1nW3RQTFucPU4zy85wQLo7ddp2SbGYc8/edit?gid=417448219"
+    )
+    fetched = FetchedGoogleSheet(
+        reference=parse_google_sheets_url(url),
+        file_name="CCT 2026 SA3 Public Schedule.xlsx",
+        content=fixture,
+        fetched_at_utc="2026-07-16T12:00:00Z",
+    )
+    current = next(
+        key
+        for key in app_module.load_parser_keys(ROOT / "parser_keys").keys
+        if key.parser_key_id == PARSER_KEY_ID
+    )
+    legacy = SimpleNamespace(**current.__dict__, select_label=current.select_label)
+    assert not hasattr(legacy, "status")
+    assert parser_key_status(legacy) == "enabled"
+
+    monkeypatch.setattr("parser.load_parser_keys", lambda _: ParserKeyCatalog([legacy], []))
+    monkeypatch.setattr("google_sheets.fetch_google_sheet", lambda value: fetched)
+
+    app_test = AppTest.from_file(str(ROOT / "app.py"), default_timeout=30)
+    app_test.run()
+    app_test.text_input(key="google_sheets_url").input(url).run()
+    app_test.button(key="load_google_sheet").click().run()
+
+    assert not app_test.exception
+    assert any("Structural matches" in item.value for item in app_test.markdown)
+
+
+def test_ingestion_methods_use_tabs_and_timezones_are_searchable() -> None:
     app_test = AppTest.from_file(str(ROOT / "app.py"), default_timeout=30)
     app_test.run()
 
-    for key in (
-        "ingestion_google_sheets",
-        "ingestion_official_website",
-        "ingestion_tournament_page",
-    ):
-        assert app_test.button(key=key).proto.help
+    assert [tab.label for tab in app_test.tabs] == [
+        "Google Sheets",
+        "Official Website",
+        "Tournament Page",
+    ]
+    assert app_test.session_state["ingestion_mode"] == "Google Sheets"
 
     assert _validated_browser_timezone("Europe/Madrid") == "Europe/Madrid"
     assert _validated_browser_timezone("Not/A_Zone") == "UTC"
@@ -316,16 +362,20 @@ def test_streamlit_official_mode_fetches_and_exposes_metadata_filters(monkeypatc
 
     app_test = AppTest.from_file(str(ROOT / "app.py"), default_timeout=30)
     app_test.run()
-    app_test.button(key="ingestion_official_website").click().run()
+    _select_ingestion_mode(app_test, "Official Website")
 
     assert not app_test.exception
     assert app_test.selectbox(key="official_source_select").value == "lol_esports"
     assert not app_test.button(key="run_parse").disabled
-    app_test.button(key="run_parse").click().run()
+    app_test.button(key="run_parse").click()
+    _select_ingestion_mode(app_test, "Official Website")
 
     assert not app_test.exception
     assert app_test.multiselect(key="preview_competition").options == ["Test League"]
     assert app_test.multiselect(key="preview_match_state").options == ["scheduled"]
+    assert app_test.multiselect(key="preview_stage")
+    assert app_test.multiselect(key="preview_status")
+    assert "More filters" not in [item.label for item in app_test.expander]
     assert not any(_download_states(app_test))
     assert any("retrieval_strategy" in caption.value for caption in app_test.caption)
 
@@ -401,14 +451,21 @@ def test_streamlit_tournament_page_mode_reuses_preview_and_export(monkeypatch) -
 
     app_test = AppTest.from_file(str(ROOT / "app.py"), default_timeout=30)
     app_test.run()
-    app_test.button(key="ingestion_tournament_page").click().run()
+    _select_ingestion_mode(app_test, "Tournament Page")
     app_test.text_input(key="tournament_page_url").input(
         "https://lol.fandom.com/wiki/Test/Event"
-    ).run()
+    )
+    _select_ingestion_mode(app_test, "Tournament Page")
 
     assert not app_test.button(key="run_parse").disabled
-    app_test.button(key="run_parse").click().run()
+    app_test.button(key="run_parse").click()
+    _select_ingestion_mode(app_test, "Tournament Page")
     assert not app_test.exception
     assert app_test.dataframe[0].value.iloc[0]["team_a"] == "Alpha"
+    assert app_test.multiselect(key="preview_competition").options == ["Event"]
+    assert app_test.multiselect(key="preview_match_state").options == ["scheduled"]
+    assert app_test.multiselect(key="preview_stage")
+    assert app_test.multiselect(key="preview_status")
+    assert "More filters" not in [item.label for item in app_test.expander]
     assert not any(_download_states(app_test))
     assert any("Complete extraction" in caption.value for caption in app_test.caption)

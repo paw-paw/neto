@@ -12,6 +12,7 @@ from .models import (
     ParserKeyCatalog,
     ParserKeyLoadError,
     ValidationIssue,
+    parser_key_status,
 )
 from .parser_keys import load_parser_keys, normalize_parser_key
 from .registration import validate_parser_key_upload
@@ -27,6 +28,7 @@ __all__ = [
     "ParserKeyCatalog",
     "ParserKeyLoadError",
     "ValidationIssue",
+    "parser_key_status",
     "load_parser_keys",
     "matches_dataframe",
     "normalize_parser_key",

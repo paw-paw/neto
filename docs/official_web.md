@@ -49,5 +49,5 @@ Competition pages are not used as fallback because the month payload reliably co
 - Date ranges are at most 90 inclusive days and are converted from the selected IANA timezone to a half-open UTC interval.
 - Required-page failures never return partial data. Valid empty responses return `parsed` with `legitimate_empty=true`.
 - Official IDs deduplicate first. Remaining equal `(start_time_utc, team_a, team_b)` tuples use NETO's existing duplicate warning.
-- Stage uses the available Competition plus source stage label. Competition remains available in the collapsed source-metadata filters and provenance table.
+- The shared official-result finalizer guarantees that Stage uses the available Competition plus source stage label for every adapter. Competition remains available in the source-metadata filters and provenance table.
 - No response headers, credentials, cookies, tokens, or analytics payloads are stored in test fixtures.
