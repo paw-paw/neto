@@ -19,6 +19,20 @@ def normalize_text(value: object) -> str:
     return " ".join(str(value or "").split())
 
 
+def compose_stage(*parts: object) -> str:
+    """Join distinct competition/stage labels without fabricating missing detail."""
+
+    values: list[str] = []
+    seen: set[str] = set()
+    for part in parts:
+        value = normalize_text(part)
+        marker = value.casefold()
+        if value and marker not in seen:
+            values.append(value)
+            seen.add(marker)
+    return " · ".join(values)
+
+
 def request_bounds(request: OfficialScheduleRequest) -> tuple[datetime, datetime]:
     if request.end_date < request.start_date:
         raise OfficialRequestError("End date must be on or after start date.")
