@@ -1,0 +1,791 @@
+{
+  "$schema": "./01_neto_parserkey_v2.schema.json",
+  "schema_version": "neto.parser_key.v2",
+  "parser_key_id": "lunar_horse_trophy_8_v1",
+  "key_name": "Lunar Horse Trophy 8 schedule ParserKey v1",
+  "status": "draft",
+  "runtime": {
+    "minimum_neto_version": "0.1.0",
+    "operator_registry_version": "neto.operators.v1",
+    "required_operators": [
+      "cell.column",
+      "cell.relative",
+      "datetime.format_date",
+      "datetime.format_time",
+      "datetime.parse_date",
+      "datetime.parse_time",
+      "literal.value",
+      "predicate.all",
+      "predicate.not_empty",
+      "records.row_scan",
+      "records.tile_grid",
+      "sheet.exact",
+      "text.to_string",
+      "text.trim"
+    ],
+    "required_plugins": []
+  },
+  "tournament": {
+    "name": "Lunar Horse Trophy 8",
+    "game": "Dota 2",
+    "organizer": null,
+    "base_timezone": "Asia/Singapore",
+    "timezone_source": "parser_key",
+    "season_or_edition": "8"
+  },
+  "workbook": {
+    "file_type": "xlsx",
+    "date_system": "1900",
+    "sheet_matching_default": "exact",
+    "formula_value_policy": {
+      "mode": "cached_value_only",
+      "fallback_order": [
+        "cached_value"
+      ],
+      "on_missing_cached_value": "warning"
+    },
+    "hidden_content_policy": {
+      "include_hidden_sheets": false,
+      "include_hidden_rows": false,
+      "include_hidden_columns": false
+    }
+  },
+  "sources": [
+    {
+      "source_id": "group_stage",
+      "sheet_locator": {
+        "op": "sheet.exact",
+        "args": {
+          "sheet_name": "Group Stage"
+        }
+      },
+      "value_mode": "inherit",
+      "required": true,
+      "description": "Authoritative 28-row round-robin schedule."
+    },
+    {
+      "source_id": "playoff",
+      "sheet_locator": {
+        "op": "sheet.exact",
+        "args": {
+          "sheet_name": "Playoff"
+        }
+      },
+      "value_mode": "inherit",
+      "required": true,
+      "description": "Date-only playoff bracket with eight explicit two-participant slots."
+    }
+  ],
+  "record_sets": [
+    {
+      "record_set_id": "group_stage_matches",
+      "enabled": true,
+      "source_id": "group_stage",
+      "locator": {
+        "op": "records.row_scan",
+        "args": {
+          "start_row": 2,
+          "end_row": 29,
+          "step": 1,
+          "anchor_column": "A"
+        }
+      },
+      "filter": {
+        "op": "predicate.all",
+        "args": {
+          "predicates": [
+            {
+              "op": "predicate.not_empty",
+              "args": {
+                "value": {
+                  "op": "cell.column",
+                  "args": {
+                    "column": "A"
+                  }
+                }
+              }
+            },
+            {
+              "op": "predicate.not_empty",
+              "args": {
+                "value": {
+                  "op": "cell.column",
+                  "args": {
+                    "column": "B"
+                  }
+                }
+              }
+            },
+            {
+              "op": "predicate.not_empty",
+              "args": {
+                "value": {
+                  "op": "cell.column",
+                  "args": {
+                    "column": "C"
+                  }
+                }
+              }
+            },
+            {
+              "op": "predicate.not_empty",
+              "args": {
+                "value": {
+                  "op": "cell.column",
+                  "args": {
+                    "column": "D"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "context": {},
+      "extractors": [],
+      "fields": {
+        "date": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "A"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_date",
+                "args": {
+                  "formats": [
+                    "auto"
+                  ]
+                }
+              },
+              {
+                "op": "datetime.format_date",
+                "args": {
+                  "format": "%Y-%m-%d"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local match date from Group Stage column A.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "time": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "B"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_time",
+                "args": {
+                  "formats": [
+                    "auto"
+                  ]
+                }
+              },
+              {
+                "op": "datetime.format_time",
+                "args": {
+                  "format": "%H:%M"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Singapore local start time from Group Stage column B, labeled SG Time in B1.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_a": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "C"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "First participant from Group Stage column C.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_b": {
+          "value": {
+            "source": {
+              "op": "cell.column",
+              "args": {
+                "column": "D"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Second participant from Group Stage column D.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stage": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Group Stage"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "Stable phase label for the Group Stage sheet.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "bo": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": null
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "Best-of format is not stated in the workbook.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "match_label": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": null
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "No match number or round label is present in the linear schedule.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "additional_fields": {},
+      "overrides": [],
+      "provenance": {
+        "enabled": true,
+        "include_source_coordinates": true,
+        "include_transform_chain": true,
+        "include_override_reason": true
+      }
+    },
+    {
+      "record_set_id": "playoff_slots",
+      "enabled": true,
+      "source_id": "playoff",
+      "locator": {
+        "op": "records.tile_grid",
+        "args": {
+          "tiles": [
+            {
+              "tile_id": "upper_opening_1",
+              "origin": "D4",
+              "record_row_offsets": [
+                0
+              ]
+            },
+            {
+              "tile_id": "upper_opening_2",
+              "origin": "D7",
+              "record_row_offsets": [
+                0
+              ]
+            },
+            {
+              "tile_id": "upper_later_round",
+              "origin": "G5",
+              "record_row_offsets": [
+                0
+              ]
+            },
+            {
+              "tile_id": "upper_final_path",
+              "origin": "I9",
+              "record_row_offsets": [
+                0
+              ]
+            },
+            {
+              "tile_id": "lower_opening_1",
+              "origin": "D11",
+              "record_row_offsets": [
+                0
+              ]
+            },
+            {
+              "tile_id": "lower_opening_2",
+              "origin": "D14",
+              "record_row_offsets": [
+                0
+              ]
+            },
+            {
+              "tile_id": "lower_later_round_1",
+              "origin": "E12",
+              "record_row_offsets": [
+                0
+              ]
+            },
+            {
+              "tile_id": "lower_later_round_2",
+              "origin": "G12",
+              "record_row_offsets": [
+                0
+              ]
+            }
+          ],
+          "record_anchor": {
+            "base": "tile_origin",
+            "column_offset": 0
+          },
+          "emit_order": "tiles_then_row_offsets"
+        }
+      },
+      "filter": {
+        "op": "predicate.not_empty",
+        "args": {
+          "value": {
+            "op": "cell.relative",
+            "args": {
+              "base": "record_anchor",
+              "row_offset": 0,
+              "column_offset": 0
+            }
+          }
+        }
+      },
+      "context": {},
+      "extractors": [],
+      "fields": {
+        "date": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_date",
+                "args": {
+                  "formats": [
+                    "auto"
+                  ]
+                }
+              },
+              {
+                "op": "datetime.format_date",
+                "args": {
+                  "format": "%Y-%m-%d"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local date from the date cell immediately above each two-row playoff participant box.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "time": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": null
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_time",
+                "args": {
+                  "formats": [
+                    "auto"
+                  ]
+                }
+              },
+              {
+                "op": "datetime.format_time",
+                "args": {
+                  "format": "%H:%M"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "The Playoff sheet contains no start-time values; this intentionally remains blocking.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_a": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 1,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "First participant cell below the playoff date; TBD is used only because the dated bracket slot is explicit and unpublished.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_b": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 2,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "Second participant cell below the playoff date; TBD is used only because the dated bracket slot is explicit and unpublished.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stage": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Playoffs"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "Stable phase label for the Playoff sheet.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "bo": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": null
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "Best-of format is not stated in the playoff bracket.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "match_label": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": null
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "The bracket contains no textual match or round labels; tile IDs remain internal provenance only.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "additional_fields": {},
+      "overrides": [],
+      "provenance": {
+        "enabled": true,
+        "include_source_coordinates": true,
+        "include_transform_chain": true,
+        "include_override_reason": true
+      }
+    }
+  ],
+  "normalization": {
+    "strings": {
+      "trim": true,
+      "collapse_internal_whitespace": true,
+      "replace_line_breaks_with_space": true,
+      "preserve_casing": true
+    },
+    "datetime": {
+      "precedence": [
+        "date_plus_time"
+      ],
+      "timezone_fallback": "tournament.base_timezone",
+      "dst_policy": "iana",
+      "utc_output_format": "%Y-%m-%dT%H:%M:%SZ",
+      "ambiguous_time_policy": "blocking_error",
+      "nonexistent_time_policy": "blocking_error"
+    },
+    "teams": {
+      "allow_placeholders": true,
+      "placeholder_values": [
+        "TBD",
+        "TBA"
+      ],
+      "placeholder_patterns": [
+        "^(Winner|Loser)\\s+M\\d+$",
+        "^Seed\\s+#?\\d+$",
+        "^Qualifier\\s+\\d+$"
+      ]
+    },
+    "best_of": {
+      "normalize": true,
+      "output_format": "BO{n}"
+    }
+  },
+  "validation": {
+    "blocking_fields": [
+      "date",
+      "time",
+      "team_a",
+      "team_b"
+    ],
+    "warning_fields": [
+      "stage",
+      "bo",
+      "match_label"
+    ],
+    "duplicate_check": {
+      "enabled": true,
+      "severity": "warning",
+      "fields": [
+        "start_time_utc",
+        "team_a",
+        "team_b"
+      ],
+      "team_order_sensitive": true
+    },
+    "record_count": {
+      "minimum": 36,
+      "maximum": 36,
+      "on_violation": "blocking_error"
+    },
+    "custom_rules": []
+  },
+  "output": {
+    "model": "neto.normalized_match.v1",
+    "columns": [
+      "date_original",
+      "time_original",
+      "timezone",
+      "start_time_utc",
+      "team_a",
+      "team_b",
+      "stage",
+      "bo",
+      "match_label",
+      "row_status"
+    ],
+    "csv_columns": [
+      "date_original",
+      "time_original",
+      "timezone",
+      "start_time_utc",
+      "team_a",
+      "team_b",
+      "stage",
+      "bo",
+      "match_label",
+      "row_status"
+    ],
+    "preserve_source_order": true,
+    "include_provenance_in_internal_result": true,
+    "sort": []
+  },
+  "extensions": {
+    "plugins": [],
+    "custom_config": {}
+  },
+  "metadata": {
+    "created_at": "2026-07-16T00:00:00Z",
+    "created_by": "NETO ParserKey Builder",
+    "updated_at": null,
+    "source_files": [
+      {
+        "filename": "Lunar Horse Trophy 8.xlsx",
+        "sha256": "158d140277e7d99c168ab16ae84b06f232bddabc2ebe7cd155fc8dbdcd902286"
+      }
+    ],
+    "notes": "Schema-valid draft for 28 group-stage matches and eight dated playoff slots. Playoff start times are absent from the workbook, so those records intentionally remain blocking/invalid until official times are supplied. Playoff tile order follows the bracket's upper path left-to-right, then lower path left-to-right.",
+    "tags": [
+      "lunar-horse-trophy",
+      "season-8",
+      "dota-2",
+      "singapore-time",
+      "draft",
+      "playoff-times-missing"
+    ]
+  }
+}

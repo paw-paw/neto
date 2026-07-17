@@ -182,6 +182,9 @@ def test_streamlit_upload_parse_preview_and_export_gating() -> None:
     ).run()
     assert all(_download_states(app_test))
     assert app_test.button(key="run_parse").disabled
+    assert app_test.selectbox(key="parser_key_select").value is None
+    assert any("low structural match" in item.value for item in app_test.warning)
+    app_test.selectbox(key="parser_key_select").select(PARSER_KEY_ID).run()
     app_test.checkbox(key="parser_key_confirm").check().run()
     app_test.button(key="run_parse").click().run()
 

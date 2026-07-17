@@ -40,6 +40,11 @@ class ParserKey:
     def select_label(self) -> str:
         return f"{self.key_name} ({self.parser_key_id})"
 
+    @property
+    def status(self) -> str:
+        value = self.raw_data.get("status")
+        return value if isinstance(value, str) and value else "enabled"
+
 
 @dataclass(frozen=True)
 class ParserKeyLoadError:

@@ -86,7 +86,7 @@ ParserKey v2 files are validated against `neto_parserkey_v2.schema.json`, the de
 
 Reference templates are stored in `examples/` so their placeholder values are not loaded as runtime keys. The v2 contract and operator semantics are documented under `docs/parserkey_v2/`.
 
-When a Google Sheet or XLSX fallback is loaded, NETO ranks the top three keys using sheet-name compatibility, bounded header/content samples, sheet dimensions, and source filename metadata. It does not run every complete parser for ranking. The score is advisory, low confidence is stated explicitly, and parsing stays disabled until the user confirms the selected key. This release does not change ranking, scoring, confidence, or ParserKey validation behavior.
+When a Google Sheet or XLSX fallback is loaded, NETO ranks up to three positive structural matches using required/distinctive sheet names, a hard-bounded 32-by-40 sample, cheap ParserKey-derived cell/anchor probes, known per-sheet bounds, and Unicode-aware tournament-family metadata. Edition numbers are separate from family identity, so an edition X key can be recommended for a structurally compatible edition X+1. The matcher does not run complete parsers. Scores use runner-up margin and independent evidence; zero-score candidates are hidden and weak no-match cases return no recommendation. Parsing stays disabled until the user confirms the selected key.
 
 The XLSX workflow also links to the NETO ParserKey Creator Custom GPT and accepts uploaded ParserKey JSON. Uploads pass the same schema, operator capability, plugin policy, identifier, regex-size, and bounded-work validation as repository keys. Valid keys become available immediately in the current browser session and are never written to GitHub or the Community Cloud filesystem. See `docs/parserkey_registration.md`.
 
@@ -137,7 +137,7 @@ $env:NETO_WIKI_LIVE_URL = "https://lol.fandom.com/wiki/<tournament>"
 pytest tests/test_wiki_live.py -q
 ```
 
-The six public Google Sheets transport checks are opt-in. They verify only that Google exports a safe XLSX; ParserKey parse outcomes are intentionally outside this check:
+The 14 public Google Sheets checks are opt-in. Their URLs and compatibility expectations live in `tests/fixtures/public_google_sheets_cases.json`. The live test verifies safe XLSX export and top-ranked ParserKey identity; full parse outcomes remain intentionally separate:
 
 ```powershell
 $env:NETO_RUN_LIVE_TESTS = "1"

@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import httpx
 import pytest
 
@@ -11,6 +14,7 @@ from google_sheets import (
     fetch_google_sheet,
     parse_google_sheets_url,
 )
+from parser.parser_keys import load_parser_keys
 from tests.helpers import valid_row, workbook_bytes
 
 
@@ -19,6 +23,9 @@ SHEET_URL = (
     f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/edit"
     "?gid=417448219#gid=417448219"
 )
+PUBLIC_CASES_PATH = (
+    Path(__file__).parent / "fixtures" / "public_google_sheets_cases.json"
+)
 
 
 def _client(handler) -> httpx.Client:
@@ -26,6 +33,38 @@ def _client(handler) -> httpx.Client:
         transport=httpx.MockTransport(handler),
         follow_redirects=True,
     )
+
+
+def test_public_google_sheets_corpus_is_valid_and_references_known_keys() -> None:
+    manifest = json.loads(PUBLIC_CASES_PATH.read_text(encoding="utf-8"))
+    cases = manifest["cases"]
+    case_ids = [case["case_id"] for case in cases]
+    sheet_ids = [parse_google_sheets_url(case["url"]).spreadsheet_id for case in cases]
+
+    assert len(cases) == 14
+    assert len(case_ids) == len(set(case_ids))
+    assert len(sheet_ids) == len(set(sheet_ids))
+    assert {case["compatibility"] for case in cases} <= {
+        "exact",
+        "cross_edition",
+        "no_known_key",
+    }
+
+    catalog = load_parser_keys(Path(__file__).parents[1] / "parser_keys")
+    assert not catalog.errors
+    catalog_ids = {parser_key.parser_key_id for parser_key in catalog.keys}
+    declared_ids = {
+        parser_key_id
+        for case in cases
+        for parser_key_id in case["acceptable_parser_key_ids"]
+    }
+    assert declared_ids <= catalog_ids
+    for case in cases:
+        parse_expectation = case.get("live_parse_expectation")
+        if parse_expectation:
+            assert parse_expectation["parser_key_id"] in case[
+                "acceptable_parser_key_ids"
+            ]
 
 
 def test_google_sheets_url_is_canonicalized_without_fetching_user_hosts() -> None:

@@ -1,0 +1,147 @@
+{
+  "description": "Opt-in public Google Sheets corpus for transport and ParserKey recommendation evaluation. Empty acceptable_parser_key_ids means that the current catalog has no known compatible key.",
+  "cases": [
+    {
+      "case_id": "stake_ranked_episode_3",
+      "label": "Stake Ranked Episode 3",
+      "url": "https://docs.google.com/spreadsheets/d/1ouauktbqfjv1nW3RQTFucPU4zy85wQLo7ddp2SbGYc8/edit?gid=417448219#gid=417448219",
+      "compatibility": "exact",
+      "acceptable_parser_key_ids": [
+        "stake_ranked_episode_3_offline_main_event_v1"
+      ]
+    },
+    {
+      "case_id": "exort_series_29",
+      "label": "Exort Series 29",
+      "url": "https://docs.google.com/spreadsheets/d/1fP6zrbzgmqTzM6sZqOo3fjyD8-nvtbOuyendKGbZPuE/edit?gid=683028203#gid=683028203",
+      "compatibility": "exact",
+      "acceptable_parser_key_ids": [
+        "exort_series_29_v1"
+      ]
+    },
+    {
+      "case_id": "betboom_rush_b_summit_part_four",
+      "label": "BetBoom RUSH B! Summit Part Four",
+      "url": "https://docs.google.com/spreadsheets/d/19cKagzrnA6BTCpqQvK4SPTGUDkbFfjh1Bk0HW5mb8pU/edit?gid=1105108609#gid=1105108609",
+      "compatibility": "exact",
+      "acceptable_parser_key_ids": [
+        "betboom_rush_b_summit_part_four_v1"
+      ]
+    },
+    {
+      "case_id": "nodwin_clutch_series_10",
+      "label": "NODWIN Clutch Series 10",
+      "url": "https://docs.google.com/spreadsheets/d/1nrY4DlizZ0JZDlxmPRrch9n5l4DVw1iR4jKpNDhN6Dk/edit?gid=1778001380#gid=1778001380",
+      "compatibility": "exact",
+      "acceptable_parser_key_ids": [
+        "nodwin_clutch_series_10_v1"
+      ]
+    },
+    {
+      "case_id": "cct_2026_south_america_4",
+      "label": "CCT 2026 South America 4",
+      "url": "https://docs.google.com/spreadsheets/d/12dfiEnSCrwYXOm9bCliRK7RKPZraCpGdM0i9dDkmb0Y/edit?gid=718451828#gid=718451828",
+      "compatibility": "cross_edition",
+      "acceptable_parser_key_ids": [
+        "cct_2026_sa3_public_schedule_v1"
+      ]
+    },
+    {
+      "case_id": "exort_series_30",
+      "label": "Exort Series 30",
+      "url": "https://docs.google.com/spreadsheets/d/1Lw3c8qqnFihIxQxWbEfjGL-WrJFqKRyBKmG7xHg3HNU/edit?gid=683028203#gid=683028203",
+      "compatibility": "cross_edition",
+      "acceptable_parser_key_ids": [
+        "exort_series_29_v1"
+      ]
+    },
+    {
+      "case_id": "starseries_s20_barcelona_2026",
+      "label": "StarSeries S20 Barcelona 2026",
+      "url": "https://docs.google.com/spreadsheets/d/14Cb-ZREABmFoEkxkGM7_15JTfeVhqSsebEfXZwUusMQ/edit?gid=1683736108#gid=1683736108",
+      "compatibility": "exact",
+      "acceptable_parser_key_ids": [
+        "starseries_s20_barcelona_2026_v1"
+      ]
+    },
+    {
+      "case_id": "united21_season_52",
+      "label": "United21 Season 52",
+      "url": "https://docs.google.com/spreadsheets/d/1ICexFZDsykbDOOlrBodkX_iyjuWYa_VifEEuTC_yzjU/edit?gid=1329149897#gid=1329149897",
+      "compatibility": "exact",
+      "acceptable_parser_key_ids": [
+        "united21_season_52_v1"
+      ]
+    },
+    {
+      "case_id": "european_pro_league_season_39",
+      "label": "European Pro League Season 39",
+      "url": "https://docs.google.com/spreadsheets/d/10mgtt-6zAfwfMyabgqWNfFbX__WTteZJm3Ju9bZG-RY/edit?gid=587082879#gid=587082879",
+      "compatibility": "exact",
+      "acceptable_parser_key_ids": [
+        "european_pro_league_season_39_v1"
+      ]
+    },
+    {
+      "case_id": "esports_world_cup_2026_dota2",
+      "label": "Esports World Cup 2026 Dota 2",
+      "url": "https://docs.google.com/spreadsheets/d/1LdCbhuSNon4dJafkBnTIMASi4_HhG8juds0RKAC54_k/edit?gid=1859997944#gid=1859997944",
+      "compatibility": "exact",
+      "acceptable_parser_key_ids": [
+        "esports_world_cup_2026_dota2_v1"
+      ]
+    },
+    {
+      "case_id": "pari_universe_july_31_august_6",
+      "label": "PARI Universe, July 31 - August 6",
+      "url": "https://docs.google.com/spreadsheets/d/1DcVIPS0zLHDgDH_U7i5DKcb7Ve21WhCkobhcYLUD_F8/edit?gid=273040381#gid=273040381",
+      "compatibility": "exact",
+      "acceptable_parser_key_ids": [
+        "pari_universe_2026_v1"
+      ],
+      "live_parse_expectation": {
+        "parser_key_id": "pari_universe_2026_v1",
+        "status": "parsed",
+        "matches": 29,
+        "blocking_errors": 0,
+        "issue_codes": []
+      }
+    },
+    {
+      "case_id": "lunar_horse_trophy_8",
+      "label": "Lunar Horse Trophy 8",
+      "url": "https://docs.google.com/spreadsheets/d/141EfxFW2tmlLNfSLzwYNXKrdy2h75_wkeQ0sm2mDkOE/edit?gid=1266929003#gid=1266929003",
+      "compatibility": "exact",
+      "acceptable_parser_key_ids": [
+        "lunar_horse_trophy_8_v1"
+      ],
+      "live_parse_expectation": {
+        "parser_key_id": "lunar_horse_trophy_8_v1",
+        "status": "blocked",
+        "matches": 36,
+        "blocking_errors": 8,
+        "issue_codes": [
+          "missing_time"
+        ]
+      }
+    },
+    {
+      "case_id": "betboom_rise_of_legends_10",
+      "label": "BetBoom Rise of Legends 10",
+      "url": "https://docs.google.com/spreadsheets/d/12JG0CjTh2L4XXPrNAiemmhFankcV5__2237URC1j2Nc/edit?gid=1564836735#gid=1564836735",
+      "compatibility": "exact",
+      "acceptable_parser_key_ids": [
+        "betboom_rise_of_legends_10_v1"
+      ]
+    },
+    {
+      "case_id": "betboom_bitva_chempionov_split_4",
+      "label": "BetBoom Bitva Chempionov Split 4",
+      "url": "https://docs.google.com/spreadsheets/d/1kDjMPnpYUmKyikEMmPyUcI8HJHHDd-nyKCYlaNFOLdg/edit?gid=1858057087#gid=1858057087",
+      "compatibility": "exact",
+      "acceptable_parser_key_ids": [
+        "betboom_bitva_chempionov_split_4_v1"
+      ]
+    }
+  ]
+}
