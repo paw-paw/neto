@@ -8,7 +8,12 @@ from openpyxl import load_workbook
 from streamlit.testing.v1 import AppTest
 
 import app as app_module
-from app import _presentation_dataframe
+from app import (
+    _presentation_dataframe,
+    _timezone_options,
+    _validated_browser_timezone,
+)
+from google_sheets import FetchedGoogleSheet, parse_google_sheets_url
 from parser.models import (
     IngestionMetadata,
     OfficialMatchMetadata,
@@ -184,6 +189,58 @@ def test_streamlit_upload_parse_preview_and_export_gating() -> None:
     assert all(_download_states(app_test))
 
 
+def test_streamlit_google_sheet_reuses_workbook_parse_flow(monkeypatch) -> None:
+    fixture = (
+        ROOT / "tests" / "fixtures" / "cct_2026_sa3_public_schedule.xlsx"
+    ).read_bytes()
+    url = (
+        "https://docs.google.com/spreadsheets/d/"
+        "1ouauktbqfjv1nW3RQTFucPU4zy85wQLo7ddp2SbGYc8/edit?gid=417448219"
+    )
+    fetched = FetchedGoogleSheet(
+        reference=parse_google_sheets_url(url),
+        file_name="CCT 2026 SA3 Public Schedule.xlsx",
+        content=fixture,
+        fetched_at_utc="2026-07-16T12:00:00Z",
+    )
+    monkeypatch.setattr("google_sheets.fetch_google_sheet", lambda value: fetched)
+
+    app_test = AppTest.from_file(str(ROOT / "app.py"), default_timeout=30)
+    app_test.run()
+    app_test.text_input(key="google_sheets_url").input(url).run()
+    app_test.button(key="load_google_sheet").click().run()
+
+    assert not app_test.exception
+    assert any("CCT 2026 SA3 Public Schedule.xlsx" in item.value for item in app_test.success)
+    app_test.selectbox(key="parser_key_select").select(PARSER_KEY_ID).run()
+    app_test.checkbox(key="parser_key_confirm").check().run()
+    app_test.button(key="run_parse").click().run()
+
+    assert not app_test.exception
+    assert any("completed successfully" in item.value for item in app_test.success)
+    assert any("google_sheets_public_xlsx_export" in item.value for item in app_test.markdown)
+    assert not any(_download_states(app_test))
+
+
+def test_ingestion_methods_have_individual_help_and_timezones_are_searchable() -> None:
+    app_test = AppTest.from_file(str(ROOT / "app.py"), default_timeout=30)
+    app_test.run()
+
+    for key in (
+        "ingestion_google_sheets",
+        "ingestion_official_website",
+        "ingestion_tournament_page",
+    ):
+        assert app_test.button(key=key).proto.help
+
+    assert _validated_browser_timezone("Europe/Madrid") == "Europe/Madrid"
+    assert _validated_browser_timezone("Not/A_Zone") == "UTC"
+    options = _timezone_options("Asia/Tokyo")
+    assert options[0] == "Asia/Tokyo"
+    assert "America/Lima" in options
+    assert "Europe/Berlin" in options
+
+
 def test_parserkey_creator_and_session_registration_are_available_immediately() -> None:
     app_test = AppTest.from_file(str(ROOT / "app.py"), default_timeout=30)
     app_test.run()
@@ -199,15 +256,16 @@ def test_parserkey_creator_and_session_registration_are_available_immediately() 
         "application/json",
     ).run()
     app_test.button(key="register_parser_key").click().run()
+    assert any(
+        "available for this session" in notice.value
+        for notice in app_test.success
+    )
+    app_test.run()
 
     assert not app_test.exception
     assert any(
         "session_uploaded_key" in option
         for option in app_test.selectbox(key="parser_key_select").options
-    )
-    assert any(
-        "available for this session" in notice.value
-        for notice in app_test.success
     )
 
 
@@ -255,7 +313,7 @@ def test_streamlit_official_mode_fetches_and_exposes_metadata_filters(monkeypatc
 
     app_test = AppTest.from_file(str(ROOT / "app.py"), default_timeout=30)
     app_test.run()
-    app_test.segmented_control(key="ingestion_mode").select("Official Website").run()
+    app_test.button(key="ingestion_official_website").click().run()
 
     assert not app_test.exception
     assert app_test.selectbox(key="official_source_select").value == "lol_esports"
@@ -340,7 +398,7 @@ def test_streamlit_tournament_page_mode_reuses_preview_and_export(monkeypatch) -
 
     app_test = AppTest.from_file(str(ROOT / "app.py"), default_timeout=30)
     app_test.run()
-    app_test.segmented_control(key="ingestion_mode").select("Tournament Page").run()
+    app_test.button(key="ingestion_tournament_page").click().run()
     app_test.text_input(key="tournament_page_url").input(
         "https://lol.fandom.com/wiki/Test/Event"
     ).run()
