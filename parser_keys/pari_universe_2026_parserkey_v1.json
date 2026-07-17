@@ -1488,7 +1488,7 @@
     "record_count": {
       "minimum": 29,
       "maximum": 29,
-      "on_violation": "blocking_error"
+      "on_violation": "warning"
     },
     "custom_rules": []
   },

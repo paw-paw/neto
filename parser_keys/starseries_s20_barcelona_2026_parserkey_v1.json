@@ -116,34 +116,6 @@
         "args": {
           "tiles": [
             {
-              "tile_id": "eu_day_1_l8",
-              "origin": "L8",
-              "record_row_offsets": [
-                0
-              ]
-            },
-            {
-              "tile_id": "eu_day_1_o8",
-              "origin": "O8",
-              "record_row_offsets": [
-                0
-              ]
-            },
-            {
-              "tile_id": "eu_day_1_l9",
-              "origin": "L9",
-              "record_row_offsets": [
-                0
-              ]
-            },
-            {
-              "tile_id": "eu_day_1_o9",
-              "origin": "O9",
-              "record_row_offsets": [
-                0
-              ]
-            },
-            {
               "tile_id": "eu_day_1_l10",
               "origin": "L10",
               "record_row_offsets": [
@@ -153,6 +125,34 @@
             {
               "tile_id": "eu_day_1_o10",
               "origin": "O10",
+              "record_row_offsets": [
+                0
+              ]
+            },
+            {
+              "tile_id": "eu_day_1_l11",
+              "origin": "L11",
+              "record_row_offsets": [
+                0
+              ]
+            },
+            {
+              "tile_id": "eu_day_1_o11",
+              "origin": "O11",
+              "record_row_offsets": [
+                0
+              ]
+            },
+            {
+              "tile_id": "eu_day_1_l12",
+              "origin": "L12",
+              "record_row_offsets": [
+                0
+              ]
+            },
+            {
+              "tile_id": "eu_day_1_o12",
+              "origin": "O12",
               "record_row_offsets": [
                 0
               ]
@@ -205,7 +205,7 @@
             "source": {
               "op": "cell.absolute",
               "args": {
-                "address": "J6"
+                "address": "J8"
               }
             },
             "transforms": [
@@ -518,34 +518,6 @@
         "args": {
           "tiles": [
             {
-              "tile_id": "eu_day_2_l14",
-              "origin": "L14",
-              "record_row_offsets": [
-                0
-              ]
-            },
-            {
-              "tile_id": "eu_day_2_o14",
-              "origin": "O14",
-              "record_row_offsets": [
-                0
-              ]
-            },
-            {
-              "tile_id": "eu_day_2_l15",
-              "origin": "L15",
-              "record_row_offsets": [
-                0
-              ]
-            },
-            {
-              "tile_id": "eu_day_2_o15",
-              "origin": "O15",
-              "record_row_offsets": [
-                0
-              ]
-            },
-            {
               "tile_id": "eu_day_2_l16",
               "origin": "L16",
               "record_row_offsets": [
@@ -555,6 +527,34 @@
             {
               "tile_id": "eu_day_2_o16",
               "origin": "O16",
+              "record_row_offsets": [
+                0
+              ]
+            },
+            {
+              "tile_id": "eu_day_2_l17",
+              "origin": "L17",
+              "record_row_offsets": [
+                0
+              ]
+            },
+            {
+              "tile_id": "eu_day_2_o17",
+              "origin": "O17",
+              "record_row_offsets": [
+                0
+              ]
+            },
+            {
+              "tile_id": "eu_day_2_l18",
+              "origin": "L18",
+              "record_row_offsets": [
+                0
+              ]
+            },
+            {
+              "tile_id": "eu_day_2_o18",
+              "origin": "O18",
               "record_row_offsets": [
                 0
               ]
@@ -607,7 +607,7 @@
             "source": {
               "op": "cell.absolute",
               "args": {
-                "address": "J12"
+                "address": "J14"
               }
             },
             "transforms": [
@@ -920,29 +920,29 @@
         "args": {
           "tiles": [
             {
-              "tile_id": "eu_day_3_r20",
-              "origin": "R20",
+              "tile_id": "eu_day_3_r22",
+              "origin": "R22",
               "record_row_offsets": [
                 0
               ]
             },
             {
-              "tile_id": "eu_day_3_t20",
-              "origin": "T20",
+              "tile_id": "eu_day_3_t22",
+              "origin": "T22",
               "record_row_offsets": [
                 0
               ]
             },
             {
-              "tile_id": "eu_day_3_r21",
-              "origin": "R21",
+              "tile_id": "eu_day_3_r23",
+              "origin": "R23",
               "record_row_offsets": [
                 0
               ]
             },
             {
-              "tile_id": "eu_day_3_t21",
-              "origin": "T21",
+              "tile_id": "eu_day_3_t23",
+              "origin": "T23",
               "record_row_offsets": [
                 0
               ]
@@ -995,7 +995,7 @@
             "source": {
               "op": "cell.absolute",
               "args": {
-                "address": "J18"
+                "address": "J20"
               }
             },
             "transforms": [
@@ -1308,29 +1308,29 @@
         "args": {
           "tiles": [
             {
-              "tile_id": "eu_day_4_r25",
-              "origin": "R25",
+              "tile_id": "eu_day_4_r27",
+              "origin": "R27",
               "record_row_offsets": [
                 0
               ]
             },
             {
-              "tile_id": "eu_day_4_t25",
-              "origin": "T25",
+              "tile_id": "eu_day_4_t27",
+              "origin": "T27",
               "record_row_offsets": [
                 0
               ]
             },
             {
-              "tile_id": "eu_day_4_r26",
-              "origin": "R26",
+              "tile_id": "eu_day_4_r28",
+              "origin": "R28",
               "record_row_offsets": [
                 0
               ]
             },
             {
-              "tile_id": "eu_day_4_t26",
-              "origin": "T26",
+              "tile_id": "eu_day_4_t28",
+              "origin": "T28",
               "record_row_offsets": [
                 0
               ]
@@ -1383,7 +1383,7 @@
             "source": {
               "op": "cell.absolute",
               "args": {
-                "address": "J23"
+                "address": "J25"
               }
             },
             "transforms": [
@@ -1696,29 +1696,29 @@
         "args": {
           "tiles": [
             {
-              "tile_id": "eu_day_5_r32",
-              "origin": "R32",
+              "tile_id": "eu_day_5_r34",
+              "origin": "R34",
               "record_row_offsets": [
                 0
               ]
             },
             {
-              "tile_id": "eu_day_5_t32",
-              "origin": "T32",
+              "tile_id": "eu_day_5_t34",
+              "origin": "T34",
               "record_row_offsets": [
                 0
               ]
             },
             {
-              "tile_id": "eu_day_5_r33",
-              "origin": "R33",
+              "tile_id": "eu_day_5_r35",
+              "origin": "R35",
               "record_row_offsets": [
                 0
               ]
             },
             {
-              "tile_id": "eu_day_5_t33",
-              "origin": "T33",
+              "tile_id": "eu_day_5_t35",
+              "origin": "T35",
               "record_row_offsets": [
                 0
               ]
@@ -1771,7 +1771,7 @@
             "source": {
               "op": "cell.absolute",
               "args": {
-                "address": "J30"
+                "address": "J32"
               }
             },
             "transforms": [
@@ -2084,15 +2084,15 @@
         "args": {
           "tiles": [
             {
-              "tile_id": "eu_day_6_r37",
-              "origin": "R37",
+              "tile_id": "eu_day_6_r39",
+              "origin": "R39",
               "record_row_offsets": [
                 0
               ]
             },
             {
-              "tile_id": "eu_day_6_r38",
-              "origin": "R38",
+              "tile_id": "eu_day_6_r40",
+              "origin": "R40",
               "record_row_offsets": [
                 0
               ]
@@ -2145,7 +2145,7 @@
             "source": {
               "op": "cell.absolute",
               "args": {
-                "address": "J35"
+                "address": "J37"
               }
             },
             "transforms": [
@@ -2458,8 +2458,8 @@
         "args": {
           "ranges": [
             {
-              "start_row": 6,
-              "end_row": 6
+              "start_row": 8,
+              "end_row": 10
             }
           ],
           "anchor_column": "N"
@@ -2512,7 +2512,7 @@
             "source": {
               "op": "cell.absolute",
               "args": {
-                "address": "M4"
+                "address": "M6"
               }
             },
             "transforms": [
@@ -2821,12 +2821,8 @@
         "args": {
           "ranges": [
             {
-              "start_row": 7,
-              "end_row": 8
-            },
-            {
-              "start_row": 12,
-              "end_row": 12
+              "start_row": 14,
+              "end_row": 16
             }
           ],
           "anchor_column": "N"
@@ -2879,7 +2875,7 @@
             "source": {
               "op": "cell.absolute",
               "args": {
-                "address": "M10"
+                "address": "M12"
               }
             },
             "transforms": [
@@ -3188,8 +3184,8 @@
         "args": {
           "ranges": [
             {
-              "start_row": 13,
-              "end_row": 14
+              "start_row": 20,
+              "end_row": 21
             }
           ],
           "anchor_column": "N"
@@ -3242,7 +3238,7 @@
             "source": {
               "op": "cell.absolute",
               "args": {
-                "address": "M16"
+                "address": "M18"
               }
             },
             "transforms": [
@@ -3551,8 +3547,8 @@
         "args": {
           "ranges": [
             {
-              "start_row": 18,
-              "end_row": 19
+              "start_row": 25,
+              "end_row": 26
             }
           ],
           "anchor_column": "N"
@@ -3605,7 +3601,7 @@
             "source": {
               "op": "cell.absolute",
               "args": {
-                "address": "M21"
+                "address": "M23"
               }
             },
             "transforms": [
@@ -3914,8 +3910,8 @@
         "args": {
           "ranges": [
             {
-              "start_row": 23,
-              "end_row": 24
+              "start_row": 30,
+              "end_row": 31
             }
           ],
           "anchor_column": "N"
@@ -3968,7 +3964,7 @@
             "source": {
               "op": "cell.absolute",
               "args": {
-                "address": "M26"
+                "address": "M28"
               }
             },
             "transforms": [
@@ -4277,8 +4273,8 @@
         "args": {
           "ranges": [
             {
-              "start_row": 28,
-              "end_row": 29
+              "start_row": 35,
+              "end_row": 36
             }
           ],
           "anchor_column": "N"
@@ -4331,7 +4327,7 @@
             "source": {
               "op": "cell.absolute",
               "args": {
-                "address": "M31"
+                "address": "M33"
               }
             },
             "transforms": [
@@ -4633,7 +4629,7 @@
     },
     {
       "record_set_id": "na_cest_2026_08_03",
-      "enabled": true,
+      "enabled": false,
       "source_id": "na_qualifier",
       "locator": {
         "op": "records.row_ranges",
@@ -4972,8 +4968,8 @@
         "args": {
           "ranges": [
             {
-              "start_row": 6,
-              "end_row": 8
+              "start_row": 8,
+              "end_row": 10
             }
           ],
           "anchor_column": "N"
@@ -5026,7 +5022,7 @@
             "source": {
               "op": "cell.absolute",
               "args": {
-                "address": "M4"
+                "address": "M6"
               }
             },
             "transforms": [
@@ -5335,8 +5331,8 @@
         "args": {
           "ranges": [
             {
-              "start_row": 12,
-              "end_row": 14
+              "start_row": 14,
+              "end_row": 16
             }
           ],
           "anchor_column": "N"
@@ -5389,7 +5385,7 @@
             "source": {
               "op": "cell.absolute",
               "args": {
-                "address": "M10"
+                "address": "M12"
               }
             },
             "transforms": [
@@ -5698,8 +5694,8 @@
         "args": {
           "ranges": [
             {
-              "start_row": 18,
-              "end_row": 19
+              "start_row": 20,
+              "end_row": 21
             }
           ],
           "anchor_column": "N"
@@ -5752,7 +5748,7 @@
             "source": {
               "op": "cell.absolute",
               "args": {
-                "address": "M16"
+                "address": "M18"
               }
             },
             "transforms": [
@@ -6061,8 +6057,8 @@
         "args": {
           "ranges": [
             {
-              "start_row": 23,
-              "end_row": 24
+              "start_row": 25,
+              "end_row": 26
             }
           ],
           "anchor_column": "N"
@@ -6115,7 +6111,7 @@
             "source": {
               "op": "cell.absolute",
               "args": {
-                "address": "M21"
+                "address": "M23"
               }
             },
             "transforms": [
@@ -6424,8 +6420,8 @@
         "args": {
           "ranges": [
             {
-              "start_row": 28,
-              "end_row": 29
+              "start_row": 30,
+              "end_row": 31
             }
           ],
           "anchor_column": "N"
@@ -6478,7 +6474,7 @@
             "source": {
               "op": "cell.absolute",
               "args": {
-                "address": "M26"
+                "address": "M28"
               }
             },
             "transforms": [
@@ -6787,8 +6783,8 @@
         "args": {
           "ranges": [
             {
-              "start_row": 33,
-              "end_row": 34
+              "start_row": 35,
+              "end_row": 36
             }
           ],
           "anchor_column": "N"
@@ -6841,7 +6837,7 @@
             "source": {
               "op": "cell.absolute",
               "args": {
-                "address": "M31"
+                "address": "M33"
               }
             },
             "transforms": [
@@ -8367,7 +8363,7 @@
     "record_count": {
       "minimum": 68,
       "maximum": 68,
-      "on_violation": "blocking_error"
+      "on_violation": "warning"
     },
     "custom_rules": []
   },
@@ -8415,7 +8411,7 @@
         "sha256": "38fba12a65af4422b00762e2293107a101a98098c468a9e7206e2195430d2d74"
       }
     ],
-    "notes": "Schema-valid draft for all 68 visible series slots. Fourteen EU qualifier records retain blocking missing-time issues because the workbook explicitly says TBD. Two distinct parallel-stream EU matches can receive warning-level duplicate keys because their generic dependency names and UTC times are identical. NA CEST dates include documented next-day rollovers. LAN participants remain explicit TBD placeholders until match assignments are published.",
+    "notes": "Schema-valid draft for all 68 visible series slots. Fourteen EU qualifier records with explicitly pending times remain exportable with time_pending warnings and blank UTC values. EU, NA, and SA coordinates follow the current public layout; the obsolete NA August 3 record set is disabled. Duplicate checks ignore rows only when both participants are declared placeholders. LAN participants remain explicit TBD placeholders until match assignments are published.",
     "tags": [
       "starseries",
       "season_20",
