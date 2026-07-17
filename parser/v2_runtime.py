@@ -31,6 +31,14 @@ from .datetime_utils import (
 from .models import ParseResult, ParsedMatch, ParserKey, ValidationIssue
 
 
+DIRECT_FORMULA_REFERENCE = re.compile(
+    r"^=\s*(?:(?:'(?P<quoted_sheet>(?:[^']|'')+)'|"
+    r"(?P<sheet>[A-Za-z_][A-Za-z0-9_.]*))!)?"
+    r"\$?(?P<column>[A-Za-z]{1,3})\$?(?P<row>[1-9]\d*)\s*$"
+)
+MAX_FORMULA_REFERENCE_DEPTH = 8
+
+
 @dataclass(frozen=True)
 class _Anchor:
     row: int
@@ -50,6 +58,11 @@ class _EvalValue:
     override_reason: str | None = None
     missing_reason: str | None = None
     formula_cache_missing: bool = False
+    formula_text: str | None = None
+    formula_resolution: str | None = None
+    resolved_source_cell: str | None = None
+    fallback_reason: str | None = None
+    source_value: Any = None
 
     def clone(self) -> "_EvalValue":
         return _EvalValue(
@@ -62,6 +75,11 @@ class _EvalValue:
             override_reason=self.override_reason,
             missing_reason=self.missing_reason,
             formula_cache_missing=self.formula_cache_missing,
+            formula_text=self.formula_text,
+            formula_resolution=self.formula_resolution,
+            resolved_source_cell=self.resolved_source_cell,
+            fallback_reason=self.fallback_reason,
+            source_value=self.source_value,
         )
 
 
@@ -109,20 +127,77 @@ class _Runtime:
     def sheet_name(self, source_id: str) -> str:
         return self.source_config[source_id]["sheet_locator"]["args"]["sheet_name"]
 
+    @staticmethod
+    def _formula_text(value: Any) -> str | None:
+        if isinstance(value, str):
+            return value
+        text = getattr(value, "text", None)
+        return text if isinstance(text, str) else None
+
+    def _direct_formula_value(
+        self,
+        sheet_name: str,
+        coordinate: str,
+        *,
+        depth: int = 0,
+        visited: set[tuple[str, str]] | None = None,
+    ) -> tuple[Any, str, str]:
+        qualified_coordinate = f"{sheet_name}!{coordinate}"
+        if depth >= MAX_FORMULA_REFERENCE_DEPTH:
+            return None, "max_depth_exceeded", qualified_coordinate
+
+        visited = set() if visited is None else set(visited)
+        identity = (sheet_name.casefold(), coordinate.upper())
+        if identity in visited:
+            return None, "cycle_detected", qualified_coordinate
+        visited.add(identity)
+
+        if (
+            sheet_name not in self.value_workbook.sheetnames
+            or sheet_name not in self.formula_workbook.sheetnames
+        ):
+            return None, "sheet_not_found", qualified_coordinate
+
+        cached_cell = self.value_workbook[sheet_name][coordinate]
+        raw_cell = self.formula_workbook[sheet_name][coordinate]
+        if cached_cell.value is not None:
+            return cached_cell.value, "resolved_reference", qualified_coordinate
+        if raw_cell.data_type != "f":
+            if _is_empty(raw_cell.value):
+                return None, "referenced_cell_empty", qualified_coordinate
+            return raw_cell.value, "resolved_reference", qualified_coordinate
+
+        formula_text = self._formula_text(raw_cell.value)
+        match = (
+            DIRECT_FORMULA_REFERENCE.fullmatch(formula_text or "")
+            if isinstance(raw_cell.value, str)
+            else None
+        )
+        if match is None:
+            return None, "referenced_formula_not_direct", qualified_coordinate
+
+        target_sheet = (
+            match.group("quoted_sheet") or match.group("sheet") or sheet_name
+        ).replace("''", "'")
+        target_coordinate = f'{match.group("column").upper()}{match.group("row")}'
+        return self._direct_formula_value(
+            target_sheet,
+            target_coordinate,
+            depth=depth + 1,
+            visited=visited,
+        )
+
     def read_coordinate(self, source_id: str, coordinate: str) -> _EvalValue:
         value_sheet, formula_sheet = self.sheets(source_id)
         cached_cell = value_sheet[coordinate]
         raw_cell = formula_sheet[coordinate]
         is_formula = raw_cell.data_type == "f"
-        mode = self.source_config[source_id].get("value_mode", "inherit")
-        if mode == "inherit":
-            mode = self.config["workbook"]["formula_value_policy"]["mode"]
-
         if cached_cell.value is not None:
             return _EvalValue(
                 value=cached_cell.value,
                 coordinate=coordinate,
                 source_op="cell",
+                source_value=cached_cell.value,
             )
         if not is_formula:
             return _EvalValue(
@@ -130,13 +205,50 @@ class _Runtime:
                 coordinate=coordinate,
                 source_op="cell",
                 missing_reason="source_empty" if _is_empty(raw_cell.value) else None,
+                source_value=raw_cell.value,
             )
-        if mode == "first_available" and raw_cell.value is not None:
+
+        formula_text = self._formula_text(raw_cell.value)
+        reference = (
+            DIRECT_FORMULA_REFERENCE.fullmatch(formula_text or "")
+            if isinstance(raw_cell.value, str)
+            else None
+        )
+        if reference is not None:
+            current_sheet = self.sheet_name(source_id)
+            target_sheet = (
+                reference.group("quoted_sheet")
+                or reference.group("sheet")
+                or current_sheet
+            ).replace("''", "'")
+            target_coordinate = (
+                f'{reference.group("column").upper()}{reference.group("row")}'
+            )
+            resolved, resolution, resolved_source_cell = self._direct_formula_value(
+                target_sheet,
+                target_coordinate,
+            )
+            if not _is_empty(resolved):
+                return _EvalValue(
+                    value=resolved,
+                    coordinate=coordinate,
+                    source_op="cell",
+                    formula_cache_missing=True,
+                    formula_text=formula_text,
+                    formula_resolution=resolution,
+                    resolved_source_cell=resolved_source_cell,
+                    source_value=raw_cell.value,
+                )
             return _EvalValue(
-                value=raw_cell.value,
+                value=None,
                 coordinate=coordinate,
                 source_op="cell",
+                missing_reason="formula_cache_missing",
                 formula_cache_missing=True,
+                formula_text=formula_text,
+                formula_resolution=resolution,
+                resolved_source_cell=resolved_source_cell,
+                source_value=raw_cell.value,
             )
         return _EvalValue(
             value=None,
@@ -144,6 +256,13 @@ class _Runtime:
             source_op="cell",
             missing_reason="formula_cache_missing",
             formula_cache_missing=True,
+            formula_text=formula_text,
+            formula_resolution=(
+                "formula_not_direct_reference"
+                if isinstance(raw_cell.value, str)
+                else "array_formula_not_supported"
+            ),
+            source_value=raw_cell.value,
         )
 
 
@@ -370,6 +489,15 @@ def _evaluate_pipeline(
         candidate = _evaluate_pipeline(fallback, env, epoch)
         if not _is_empty(candidate.value):
             candidate.used_fallback = True
+            candidate.fallback_reason = result.missing_reason or "source_empty"
+            if result.formula_cache_missing:
+                candidate.formula_cache_missing = True
+                candidate.formula_text = result.formula_text
+                candidate.formula_resolution = result.formula_resolution
+                candidate.resolved_source_cell = result.resolved_source_cell
+                candidate.coordinate = result.coordinate
+                candidate.source_op = result.source_op
+                candidate.source_value = result.source_value
             return candidate
     result.value = None
     result.missing_reason = result.missing_reason or "source_empty"
@@ -477,14 +605,17 @@ def _extractor_outputs(
             outputs[output_name] = output
         return outputs
     return {
-        output_name: _EvalValue(
-            coordinate=input_value.coordinate,
-            source_op="extract.regex",
-            missing_reason="extractor_failed",
-            formula_cache_missing=input_value.formula_cache_missing,
-        )
+        output_name: _failed_extractor_output(input_value)
         for output_name in args["named_outputs"]
     }
+
+
+def _failed_extractor_output(input_value: _EvalValue) -> _EvalValue:
+    output = input_value.clone()
+    output.value = None
+    output.source_op = "extract.regex"
+    output.missing_reason = "extractor_failed"
+    return output
 
 
 def _field_value(
@@ -492,6 +623,7 @@ def _field_value(
 ) -> _EvalValue:
     result = _evaluate_pipeline(field_spec["value"], env, epoch)
     if _is_empty(result.value) and field_spec.get("on_missing") == "use_default":
+        result.fallback_reason = result.missing_reason or "source_empty"
         result.value = field_spec.get("default")
         result.used_default = True
         result.missing_reason = None if not _is_empty(result.value) else result.missing_reason
@@ -500,6 +632,10 @@ def _field_value(
 
 def _normalized_output(value: Any) -> str:
     if value is None:
+        return ""
+    if isinstance(value, str) and value.lstrip().startswith("="):
+        return ""
+    if not isinstance(value, (str, int, float, bool, date, time)):
         return ""
     if isinstance(value, datetime):
         value = value.isoformat(sep=" ")
@@ -521,6 +657,17 @@ def _issue_for_missing(
     field_spec: dict[str, Any],
     env: _Environment,
 ) -> ValidationIssue | None:
+    source_text = _normalized_output(result.source_value).upper()
+    if field_name == "time" and source_text in {"TBD", "TBA"}:
+        return ValidationIssue(
+            source_row=env.anchor.row,
+            source_sheet=env.runtime.sheet_name(env.source_id),
+            record_set_id=env.record_set_id,
+            severity="warning",
+            code="time_pending",
+            affected_field=field_name,
+            message="Time is pending in the source schedule.",
+        )
     on_missing = field_spec.get("on_missing", "null")
     if on_missing not in {"blocking_error", "warning"}:
         return None
@@ -563,6 +710,11 @@ def _provenance(result: _EvalValue, env: _Environment) -> dict[str, Any]:
         "used_fallback": result.used_fallback,
         "used_default": result.used_default,
         "override_reason": result.override_reason,
+        "formula_cache_missing": result.formula_cache_missing,
+        "formula_text": result.formula_text,
+        "formula_resolution": result.formula_resolution,
+        "resolved_source_cell": result.resolved_source_cell,
+        "fallback_reason": result.fallback_reason,
     }
 
 
@@ -607,20 +759,55 @@ def _parse_record(
     issues: list[ValidationIssue] = []
     for field_name, field_spec in field_specs.items():
         value = values[field_name]
+        if field_name == "time" and _normalized_output(value.value).upper() in {
+            "TBD",
+            "TBA",
+        }:
+            value.source_value = value.value
+            value.value = None
+            value.missing_reason = "time_pending"
         if _is_empty(value.value):
             issue = _issue_for_missing(field_name, value, field_spec, env)
             if issue:
                 issues.append(issue)
         if value.formula_cache_missing:
+            formula_policy = runtime.config["workbook"]["formula_value_policy"].get(
+                "on_missing_cached_value", "warning"
+            )
+            if formula_policy == "null":
+                continue
+            severity = (
+                "blocking_error"
+                if formula_policy == "blocking_error"
+                else "warning"
+            )
+            normalized_value = _normalized_output(value.value)
+            if value.formula_resolution == "resolved_reference":
+                message = (
+                    "A formula cell had no cached value; its direct cell reference "
+                    "was resolved safely."
+                )
+            elif normalized_value.upper() == "TBD" and (
+                value.used_fallback or value.used_default
+            ):
+                message = (
+                    "A formula cell had no cached value; explicit field policy "
+                    "used TBD."
+                )
+            else:
+                message = (
+                    "A formula cell had no cached value and no safe direct "
+                    "reference result was available."
+                )
             issues.append(
                 ValidationIssue(
                     source_row=anchor.row,
                     source_sheet=runtime.sheet_name(env.source_id),
                     record_set_id=env.record_set_id,
-                    severity="warning",
+                    severity=severity,
                     code="formula_cached_value_missing",
                     affected_field=field_name,
-                    message="A formula cell had no cached value; fallback behavior was used.",
+                    message=message,
                 )
             )
 
@@ -713,13 +900,45 @@ def _timezone(parser_key: ParserKey) -> tuple[ZoneInfo | None, str | None]:
         return None, "invalid_timezone"
 
 
+def _is_placeholder(value: str, team_config: dict[str, Any]) -> bool:
+    text = normalize_whitespace(value)
+    if not text:
+        return False
+    placeholder_values = {
+        normalize_whitespace(str(item)).casefold()
+        for item in team_config.get("placeholder_values", [])
+    }
+    if text.casefold() in placeholder_values:
+        return True
+    return any(
+        re.fullmatch(pattern, text, re.IGNORECASE) is not None
+        for pattern in team_config.get("placeholder_patterns", [])
+    )
+
+
 def _add_duplicates(
-    matches: list[ParsedMatch], issues: list[ValidationIssue]
+    matches: list[ParsedMatch],
+    issues: list[ValidationIssue],
+    duplicate_config: dict[str, Any],
+    team_config: dict[str, Any],
 ) -> None:
-    groups: dict[tuple[str, str, str], list[ParsedMatch]] = defaultdict(list)
+    fields = list(duplicate_config.get("fields", []))
+    severity = duplicate_config.get("severity", "warning")
+    team_order_sensitive = duplicate_config.get("team_order_sensitive", True)
+    groups: dict[tuple[str, ...], list[ParsedMatch]] = defaultdict(list)
     for match in matches:
-        if match.start_time_utc and match.team_a and match.team_b:
-            groups[(match.start_time_utc, match.team_a, match.team_b)].append(match)
+        if _is_placeholder(match.team_a, team_config) and _is_placeholder(
+            match.team_b, team_config
+        ):
+            continue
+        values = {field: str(getattr(match, field, "") or "") for field in fields}
+        if not all(values.values()):
+            continue
+        if not team_order_sensitive and {"team_a", "team_b"}.issubset(values):
+            values["team_a"], values["team_b"] = sorted(
+                (values["team_a"], values["team_b"]), key=str.casefold
+            )
+        groups[tuple(values[field] for field in fields)].append(match)
     for group in groups.values():
         if len(group) < 2:
             continue
@@ -732,9 +951,9 @@ def _add_duplicates(
                     source_row=match.source_row,
                     source_sheet=match.source_sheet,
                     record_set_id=match.record_set_id,
-                    severity="warning",
+                    severity=severity,
                     code="possible_duplicate",
-                    affected_field="start_time_utc,team_a,team_b",
+                    affected_field=",".join(fields),
                     message=f"Possible duplicate across {coordinates}.",
                 )
             )
@@ -824,22 +1043,39 @@ def parse_workbook_v2(file_bytes: bytes, parser_key: ParserKey) -> ParseResult:
             )
 
         count_rule = parser_key.raw_data["validation"]["record_count"]
-        if not int(count_rule["minimum"]) <= len(matches) <= int(count_rule["maximum"]):
+        minimum = count_rule.get("minimum")
+        maximum = count_rule.get("maximum")
+        below_minimum = minimum is not None and len(matches) < int(minimum)
+        above_maximum = maximum is not None and len(matches) > int(maximum)
+        if below_minimum or above_maximum:
+            expected = (
+                f"{minimum}–{maximum}"
+                if minimum is not None and maximum is not None
+                else f"at least {minimum}"
+                if minimum is not None
+                else f"at most {maximum}"
+            )
             issues.append(
                 ValidationIssue(
                     source_row=None,
-                    severity="blocking_error",
+                    severity=count_rule.get("on_violation", "blocking_error"),
                     code="record_count_mismatch",
                     affected_field=None,
                     message=(
-                        f"ParserKey expected {count_rule['minimum']}–{count_rule['maximum']} "
+                        f"ParserKey expected {expected} "
                         f"records but emitted {len(matches)}."
                     ),
                 )
             )
 
-        if parser_key.raw_data["validation"]["duplicate_check"].get("enabled", True):
-            _add_duplicates(matches, issues)
+        duplicate_config = parser_key.raw_data["validation"]["duplicate_check"]
+        if duplicate_config.get("enabled", True):
+            _add_duplicates(
+                matches,
+                issues,
+                duplicate_config,
+                parser_key.raw_data.get("normalization", {}).get("teams", {}),
+            )
         _assign_statuses(matches, issues)
         if any(issue.severity == "blocking_error" for issue in issues):
             status = "blocked"
