@@ -28,5 +28,5 @@ def test_supplied_cct_workbook_end_to_end() -> None:
     assert result.invalid_matches == 0
     assert result.warnings_count == 0
     assert result.errors_count == 0
-    assert result.matches[0].start_time_utc == "2026-06-27T15:00:00Z"
-    assert result.matches[-1].start_time_utc == "2026-07-09T23:00:00Z"
+    assert result.matches[0].start_time_utc == "2026-06-27T13:00:00Z"
+    assert result.matches[-1].start_time_utc == "2026-07-09T21:00:00Z"

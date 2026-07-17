@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -17,6 +18,7 @@ from parser.models import (
 from parser.presentation import canonical_view_dataframe, presentation_dataframe
 from parser.ui_exports import canonical_csv_bytes, markdown_bytes, pdf_bytes, xlsx_bytes
 from tests.helpers import valid_row, workbook_bytes
+from tests.test_parser_keys import nested_key_data
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -56,8 +58,8 @@ def test_preview_uses_natural_columns_and_sorts_by_utc() -> None:
     )
     result = ParseResult(status="parsed", matches=[later, earlier])
 
-    ascending = _presentation_dataframe(result)
-    descending = _presentation_dataframe(result, descending=True)
+    descending = _presentation_dataframe(result)
+    ascending = _presentation_dataframe(result, descending=False)
 
     assert list(ascending.columns) == [
         "date",
@@ -139,6 +141,10 @@ def test_streamlit_upload_parse_preview_and_export_gating() -> None:
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     ).run()
     app_test.selectbox(key="parser_key_select").select(PARSER_KEY_ID).run()
+    assert app_test.button(key="run_parse").disabled
+    assert app_test.checkbox(key="parser_key_confirm").value is False
+    app_test.checkbox(key="parser_key_confirm").check().run()
+    assert not app_test.button(key="run_parse").disabled
     app_test.button(key="run_parse").click().run()
 
     assert not app_test.exception
@@ -153,12 +159,12 @@ def test_streamlit_upload_parse_preview_and_export_gating() -> None:
         "bo",
         "stage",
     ]
-    assert preview.iloc[0]["date"] == "27-06-2026"
-    assert app_test.segmented_control(key="preview_sort_order").value == "↑ Ascending"
-    app_test.segmented_control(key="preview_sort_order").select("↓ Descending").run()
-    descending_preview = app_test.dataframe[0].value
-    assert descending_preview.iloc[0]["date"] == "09-07-2026"
-    assert descending_preview.iloc[0]["time"] == "18:00"
+    assert preview.iloc[0]["date"] == "09-07-2026"
+    assert preview.iloc[0]["time"] == "18:00"
+    assert app_test.segmented_control(key="preview_sort_order").value == "↓ Descending"
+    app_test.segmented_control(key="preview_sort_order").select("↑ Ascending").run()
+    ascending_preview = app_test.dataframe[0].value
+    assert ascending_preview.iloc[0]["date"] == "27-06-2026"
     assert not any(_download_states(app_test))
 
     blocked = workbook_bytes([valid_row(team_a=None)])
@@ -170,10 +176,39 @@ def test_streamlit_upload_parse_preview_and_export_gating() -> None:
         )
     ).run()
     assert all(_download_states(app_test))
+    assert app_test.button(key="run_parse").disabled
+    app_test.checkbox(key="parser_key_confirm").check().run()
     app_test.button(key="run_parse").click().run()
 
     assert any("Parse blocked" in item.value for item in app_test.error)
     assert all(_download_states(app_test))
+
+
+def test_parserkey_creator_and_session_registration_are_available_immediately() -> None:
+    app_test = AppTest.from_file(str(ROOT / "app.py"), default_timeout=30)
+    app_test.run()
+
+    links = app_test.get("link_button")
+    assert any("ParserKey Creator" in link.label for link in links)
+    uploaded = nested_key_data()
+    uploaded["parser_key_id"] = "session_uploaded_key"
+    uploaded["key_name"] = "Session Uploaded Key"
+    app_test.file_uploader(key="parser_key_upload").upload(
+        "session_uploaded_key.json",
+        json.dumps(uploaded).encode(),
+        "application/json",
+    ).run()
+    app_test.button(key="register_parser_key").click().run()
+
+    assert not app_test.exception
+    assert any(
+        "session_uploaded_key" in option
+        for option in app_test.selectbox(key="parser_key_select").options
+    )
+    assert any(
+        "available for this session" in notice.value
+        for notice in app_test.success
+    )
 
 
 def test_streamlit_official_mode_fetches_and_exposes_metadata_filters(monkeypatch) -> None:
@@ -261,3 +296,58 @@ def test_official_cache_keeps_successes_but_not_failures(monkeypatch) -> None:
     with pytest.raises(app_module._OfficialFetchFailed):
         app_module._cached_fetch_official(*args)
     assert calls == 3
+
+
+def test_streamlit_tournament_page_mode_reuses_preview_and_export(monkeypatch) -> None:
+    wiki_match = ParsedMatch(
+        source_row=1,
+        source_sheet="Test/Event",
+        date_original="2026-07-20",
+        time_original="18:00:00",
+        timezone="UTC",
+        start_time_utc="2026-07-20T18:00:00Z",
+        team_a="Alpha",
+        team_b="Beta",
+        stage="Final",
+        bo="BO5",
+        match_label="wiki-1",
+        official=OfficialMatchMetadata(
+            source_id="leaguepedia_league_of_legends",
+            match_id="wiki-1",
+            source_url="https://lol.fandom.com/wiki/Test/Event",
+            competition_name="Event",
+            match_state="scheduled",
+        ),
+    )
+    fetched = ParseResult(
+        status="parsed",
+        matches=[wiki_match],
+        notice="Complete extraction: 1 match(es).",
+        ingestion=IngestionMetadata(
+            method="wiki_tournament",
+            source_id="leaguepedia_league_of_legends",
+            source_label="Leaguepedia — League of Legends",
+            source_url="https://lol.fandom.com/wiki/Test/Event",
+            strategy="leaguepedia_mediawiki_cargo_matchschedule",
+            fetched_at_utc="2026-07-15T12:00:00Z",
+            request_count=1,
+        ),
+    )
+    app_module._cached_fetch_tournament.clear()
+    monkeypatch.setattr(
+        "wiki_ingestion.fetch_tournament_schedule", lambda *args, **kwargs: fetched
+    )
+
+    app_test = AppTest.from_file(str(ROOT / "app.py"), default_timeout=30)
+    app_test.run()
+    app_test.segmented_control(key="ingestion_mode").select("Tournament Page").run()
+    app_test.text_input(key="tournament_page_url").input(
+        "https://lol.fandom.com/wiki/Test/Event"
+    ).run()
+
+    assert not app_test.button(key="run_parse").disabled
+    app_test.button(key="run_parse").click().run()
+    assert not app_test.exception
+    assert app_test.dataframe[0].value.iloc[0]["team_a"] == "Alpha"
+    assert not any(_download_states(app_test))
+    assert any("Complete extraction" in caption.value for caption in app_test.caption)

@@ -1,0 +1,3162 @@
+{
+  "$schema": "./neto_parserkey_v2.schema.json",
+  "schema_version": "neto.parser_key.v2",
+  "parser_key_id": "united21_season_52_v1",
+  "key_name": "United21 Season 52",
+  "status": "draft",
+  "runtime": {
+    "minimum_neto_version": "0.1.0",
+    "operator_registry_version": "neto.operators.v1",
+    "required_operators": [
+      "cell.relative",
+      "datetime.format_date",
+      "datetime.format_time",
+      "datetime.parse_date",
+      "datetime.parse_time",
+      "extract.regex",
+      "extractor.output",
+      "literal.value",
+      "predicate.not_empty",
+      "records.tile_grid",
+      "sheet.exact",
+      "text.to_string",
+      "text.trim"
+    ],
+    "required_plugins": []
+  },
+  "tournament": {
+    "name": "United21 Season 52",
+    "game": "Counter-Strike 2",
+    "organizer": "United21",
+    "base_timezone": "Europe/Berlin",
+    "timezone_source": "parser_key",
+    "season_or_edition": "Season 52"
+  },
+  "workbook": {
+    "file_type": "xlsx",
+    "date_system": "1900",
+    "sheet_matching_default": "exact",
+    "formula_value_policy": {
+      "mode": "cached_value_only",
+      "fallback_order": [
+        "cached_value"
+      ],
+      "on_missing_cached_value": "blocking_error"
+    },
+    "hidden_content_policy": {
+      "include_hidden_sheets": false,
+      "include_hidden_rows": false,
+      "include_hidden_columns": false
+    }
+  },
+  "sources": [
+    {
+      "source_id": "group_stage",
+      "sheet_locator": {
+        "op": "sheet.exact",
+        "args": {
+          "sheet_name": "Group Stage"
+        }
+      },
+      "value_mode": "inherit",
+      "required": true,
+      "description": "Authoritative visible group-stage schedule; date/time headers are cached formulas."
+    },
+    {
+      "source_id": "playoffs",
+      "sheet_locator": {
+        "op": "sheet.exact",
+        "args": {
+          "sheet_name": "Play-Off"
+        }
+      },
+      "value_mode": "inherit",
+      "required": true,
+      "description": "Authoritative bracket schedule; dated slots remain records when future participants are unpublished."
+    }
+  ],
+  "record_sets": [
+    {
+      "record_set_id": "group_stage_schedule",
+      "enabled": true,
+      "source_id": "group_stage",
+      "locator": {
+        "op": "records.tile_grid",
+        "args": {
+          "tiles": [
+            {
+              "tile_id": "tour_1_left",
+              "origin": "A19",
+              "record_row_offsets": [
+                0,
+                3,
+                6,
+                9
+              ]
+            },
+            {
+              "tile_id": "tour_1_right",
+              "origin": "D19",
+              "record_row_offsets": [
+                0,
+                3,
+                6,
+                9
+              ]
+            },
+            {
+              "tile_id": "tour_2_left",
+              "origin": "G19",
+              "record_row_offsets": [
+                0,
+                3,
+                6,
+                9
+              ]
+            },
+            {
+              "tile_id": "tour_2_right",
+              "origin": "J19",
+              "record_row_offsets": [
+                0,
+                3,
+                6,
+                9
+              ]
+            },
+            {
+              "tile_id": "tour_3_left",
+              "origin": "M19",
+              "record_row_offsets": [
+                0,
+                3
+              ]
+            },
+            {
+              "tile_id": "tour_3_right",
+              "origin": "P19",
+              "record_row_offsets": [
+                0,
+                3
+              ]
+            }
+          ],
+          "record_anchor": {
+            "base": "tile_origin",
+            "column_offset": 0
+          },
+          "emit_order": "tiles_then_row_offsets"
+        }
+      },
+      "filter": {
+        "op": "predicate.not_empty",
+        "args": {
+          "value": {
+            "op": "cell.relative",
+            "args": {
+              "base": "record_anchor",
+              "row_offset": 0,
+              "column_offset": 0
+            }
+          }
+        }
+      },
+      "context": {},
+      "extractors": [
+        {
+          "extractor_id": "schedule_header",
+          "input": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "operator": {
+            "op": "extract.regex",
+            "args": {
+              "patterns": [
+                {
+                  "pattern": "^\\s*(?P<group>GROUP\\s+[A-D])\\s+(?P<date>\\d{2}\\.\\d{2}\\.\\d{4})\\s+(?P<time>\\d{1,2}:\\d{2})\\s+CET\\s*$",
+                  "flags": [
+                    "IGNORECASE"
+                  ]
+                }
+              ],
+              "named_outputs": [
+                "group",
+                "date",
+                "time"
+              ]
+            }
+          },
+          "on_failure": "null"
+        },
+        {
+          "extractor_id": "match_text",
+          "input": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 1,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "operator": {
+            "op": "extract.regex",
+            "args": {
+              "patterns": [
+                {
+                  "pattern": "^\\s*(?P<team_a>.+?)\\s+vs\\.?\\s+(?P<team_b>.+?)\\s*$",
+                  "flags": [
+                    "IGNORECASE"
+                  ]
+                }
+              ],
+              "named_outputs": [
+                "team_a",
+                "team_b"
+              ]
+            }
+          },
+          "on_failure": "null"
+        }
+      ],
+      "fields": {
+        "date": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "schedule_header",
+                "output": "date"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_date",
+                "args": {
+                  "formats": [
+                    "%d.%m.%Y"
+                  ],
+                  "locale": "en"
+                }
+              },
+              {
+                "op": "datetime.format_date",
+                "args": {
+                  "format": "%Y-%m-%d"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local match date parsed from the cached schedule header.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "time": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "schedule_header",
+                "output": "time"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_time",
+                "args": {
+                  "formats": [
+                    "%H:%M"
+                  ]
+                }
+              },
+              {
+                "op": "datetime.format_time",
+                "args": {
+                  "format": "%H:%M"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local match time parsed from the cached schedule header.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_a": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "match_text",
+                "output": "team_a"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "First team parsed from the visible 'A vs B' cell.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_b": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "match_text",
+                "output": "team_b"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Second team parsed from the visible 'A vs B' cell.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stage": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Group Stage"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "Stable phase label from the Group Stage sheet.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "bo": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "BO3"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "INFO!A15 states all group-stage matches are Bo3.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "match_label": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "schedule_header",
+                "output": "group"
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "Group identifier from the schedule header.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "additional_fields": {},
+      "overrides": [],
+      "provenance": {
+        "enabled": true,
+        "include_source_coordinates": true,
+        "include_transform_chain": true,
+        "include_override_reason": true
+      }
+    },
+    {
+      "record_set_id": "upper_bracket_quarterfinals",
+      "enabled": true,
+      "source_id": "playoffs",
+      "locator": {
+        "op": "records.tile_grid",
+        "args": {
+          "tiles": [
+            {
+              "tile_id": "upper_bracket_quarterfinals_1",
+              "origin": "B3",
+              "record_row_offsets": [
+                0
+              ]
+            },
+            {
+              "tile_id": "upper_bracket_quarterfinals_2",
+              "origin": "B10",
+              "record_row_offsets": [
+                0
+              ]
+            },
+            {
+              "tile_id": "upper_bracket_quarterfinals_3",
+              "origin": "B16",
+              "record_row_offsets": [
+                0
+              ]
+            },
+            {
+              "tile_id": "upper_bracket_quarterfinals_4",
+              "origin": "B23",
+              "record_row_offsets": [
+                0
+              ]
+            }
+          ],
+          "record_anchor": {
+            "base": "tile_origin",
+            "column_offset": 0
+          },
+          "emit_order": "tiles_then_row_offsets"
+        }
+      },
+      "filter": {
+        "op": "predicate.not_empty",
+        "args": {
+          "value": {
+            "op": "cell.relative",
+            "args": {
+              "base": "record_anchor",
+              "row_offset": 0,
+              "column_offset": 0
+            }
+          }
+        }
+      },
+      "context": {},
+      "extractors": [
+        {
+          "extractor_id": "schedule_header",
+          "input": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "operator": {
+            "op": "extract.regex",
+            "args": {
+              "patterns": [
+                {
+                  "pattern": "^\\s*(?P<date>\\d{2}\\.\\d{2}\\.\\d{4})\\s+(?P<time>\\d{1,2}:\\d{2})\\s+CET\\s*$",
+                  "flags": [
+                    "IGNORECASE"
+                  ]
+                }
+              ],
+              "named_outputs": [
+                "date",
+                "time"
+              ]
+            }
+          },
+          "on_failure": "null"
+        }
+      ],
+      "fields": {
+        "date": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "schedule_header",
+                "output": "date"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_date",
+                "args": {
+                  "formats": [
+                    "%d.%m.%Y"
+                  ],
+                  "locale": "en"
+                }
+              },
+              {
+                "op": "datetime.format_date",
+                "args": {
+                  "format": "%Y-%m-%d"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local playoff date parsed from the cached bracket timestamp.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "time": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "schedule_header",
+                "output": "time"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_time",
+                "args": {
+                  "formats": [
+                    "%H:%M"
+                  ]
+                }
+              },
+              {
+                "op": "datetime.format_time",
+                "args": {
+                  "format": "%H:%M"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local playoff time parsed from the cached bracket timestamp.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_a": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 1,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "First bracket participant; TBD only when the dated slot exists and the cell is unpublished.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_b": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 2,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "Second bracket participant; TBD only when the dated slot exists and the cell is unpublished.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stage": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Playoffs"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "Stable phase label from the Play-Off sheet.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "bo": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "BO3"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "INFO!A20-A21 state playoff and Grand Final matches are Bo3.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "match_label": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Upper Bracket Quarterfinals"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "Bracket round label.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "additional_fields": {},
+      "overrides": [],
+      "provenance": {
+        "enabled": true,
+        "include_source_coordinates": true,
+        "include_transform_chain": true,
+        "include_override_reason": true
+      }
+    },
+    {
+      "record_set_id": "lower_bracket_round_1",
+      "enabled": true,
+      "source_id": "playoffs",
+      "locator": {
+        "op": "records.tile_grid",
+        "args": {
+          "tiles": [
+            {
+              "tile_id": "lower_bracket_round_1_1",
+              "origin": "B30",
+              "record_row_offsets": [
+                0
+              ]
+            },
+            {
+              "tile_id": "lower_bracket_round_1_2",
+              "origin": "B37",
+              "record_row_offsets": [
+                0
+              ]
+            }
+          ],
+          "record_anchor": {
+            "base": "tile_origin",
+            "column_offset": 0
+          },
+          "emit_order": "tiles_then_row_offsets"
+        }
+      },
+      "filter": {
+        "op": "predicate.not_empty",
+        "args": {
+          "value": {
+            "op": "cell.relative",
+            "args": {
+              "base": "record_anchor",
+              "row_offset": 0,
+              "column_offset": 0
+            }
+          }
+        }
+      },
+      "context": {},
+      "extractors": [
+        {
+          "extractor_id": "schedule_header",
+          "input": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "operator": {
+            "op": "extract.regex",
+            "args": {
+              "patterns": [
+                {
+                  "pattern": "^\\s*(?P<date>\\d{2}\\.\\d{2}\\.\\d{4})\\s+(?P<time>\\d{1,2}:\\d{2})\\s+CET\\s*$",
+                  "flags": [
+                    "IGNORECASE"
+                  ]
+                }
+              ],
+              "named_outputs": [
+                "date",
+                "time"
+              ]
+            }
+          },
+          "on_failure": "null"
+        }
+      ],
+      "fields": {
+        "date": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "schedule_header",
+                "output": "date"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_date",
+                "args": {
+                  "formats": [
+                    "%d.%m.%Y"
+                  ],
+                  "locale": "en"
+                }
+              },
+              {
+                "op": "datetime.format_date",
+                "args": {
+                  "format": "%Y-%m-%d"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local playoff date parsed from the cached bracket timestamp.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "time": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "schedule_header",
+                "output": "time"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_time",
+                "args": {
+                  "formats": [
+                    "%H:%M"
+                  ]
+                }
+              },
+              {
+                "op": "datetime.format_time",
+                "args": {
+                  "format": "%H:%M"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local playoff time parsed from the cached bracket timestamp.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_a": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 1,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "First bracket participant; TBD only when the dated slot exists and the cell is unpublished.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_b": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 2,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "Second bracket participant; TBD only when the dated slot exists and the cell is unpublished.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stage": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Playoffs"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "Stable phase label from the Play-Off sheet.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "bo": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "BO3"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "INFO!A20-A21 state playoff and Grand Final matches are Bo3.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "match_label": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Lower Bracket Round 1"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "Bracket round label.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "additional_fields": {},
+      "overrides": [],
+      "provenance": {
+        "enabled": true,
+        "include_source_coordinates": true,
+        "include_transform_chain": true,
+        "include_override_reason": true
+      }
+    },
+    {
+      "record_set_id": "upper_bracket_semifinals",
+      "enabled": true,
+      "source_id": "playoffs",
+      "locator": {
+        "op": "records.tile_grid",
+        "args": {
+          "tiles": [
+            {
+              "tile_id": "upper_bracket_semifinals_1",
+              "origin": "F6",
+              "record_row_offsets": [
+                0
+              ]
+            },
+            {
+              "tile_id": "upper_bracket_semifinals_2",
+              "origin": "F19",
+              "record_row_offsets": [
+                0
+              ]
+            }
+          ],
+          "record_anchor": {
+            "base": "tile_origin",
+            "column_offset": 0
+          },
+          "emit_order": "tiles_then_row_offsets"
+        }
+      },
+      "filter": {
+        "op": "predicate.not_empty",
+        "args": {
+          "value": {
+            "op": "cell.relative",
+            "args": {
+              "base": "record_anchor",
+              "row_offset": 0,
+              "column_offset": 0
+            }
+          }
+        }
+      },
+      "context": {},
+      "extractors": [
+        {
+          "extractor_id": "schedule_header",
+          "input": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "operator": {
+            "op": "extract.regex",
+            "args": {
+              "patterns": [
+                {
+                  "pattern": "^\\s*(?P<date>\\d{2}\\.\\d{2}\\.\\d{4})\\s+(?P<time>\\d{1,2}:\\d{2})\\s+CET\\s*$",
+                  "flags": [
+                    "IGNORECASE"
+                  ]
+                }
+              ],
+              "named_outputs": [
+                "date",
+                "time"
+              ]
+            }
+          },
+          "on_failure": "null"
+        }
+      ],
+      "fields": {
+        "date": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "schedule_header",
+                "output": "date"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_date",
+                "args": {
+                  "formats": [
+                    "%d.%m.%Y"
+                  ],
+                  "locale": "en"
+                }
+              },
+              {
+                "op": "datetime.format_date",
+                "args": {
+                  "format": "%Y-%m-%d"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local playoff date parsed from the cached bracket timestamp.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "time": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "schedule_header",
+                "output": "time"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_time",
+                "args": {
+                  "formats": [
+                    "%H:%M"
+                  ]
+                }
+              },
+              {
+                "op": "datetime.format_time",
+                "args": {
+                  "format": "%H:%M"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local playoff time parsed from the cached bracket timestamp.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_a": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 1,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "First bracket participant; TBD only when the dated slot exists and the cell is unpublished.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_b": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 2,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "Second bracket participant; TBD only when the dated slot exists and the cell is unpublished.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stage": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Playoffs"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "Stable phase label from the Play-Off sheet.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "bo": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "BO3"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "INFO!A20-A21 state playoff and Grand Final matches are Bo3.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "match_label": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Upper Bracket Semifinals"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "Bracket round label.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "additional_fields": {},
+      "overrides": [],
+      "provenance": {
+        "enabled": true,
+        "include_source_coordinates": true,
+        "include_transform_chain": true,
+        "include_override_reason": true
+      }
+    },
+    {
+      "record_set_id": "lower_bracket_quarterfinals",
+      "enabled": true,
+      "source_id": "playoffs",
+      "locator": {
+        "op": "records.tile_grid",
+        "args": {
+          "tiles": [
+            {
+              "tile_id": "lower_bracket_quarterfinals_1",
+              "origin": "F30",
+              "record_row_offsets": [
+                0
+              ]
+            },
+            {
+              "tile_id": "lower_bracket_quarterfinals_2",
+              "origin": "F37",
+              "record_row_offsets": [
+                0
+              ]
+            }
+          ],
+          "record_anchor": {
+            "base": "tile_origin",
+            "column_offset": 0
+          },
+          "emit_order": "tiles_then_row_offsets"
+        }
+      },
+      "filter": {
+        "op": "predicate.not_empty",
+        "args": {
+          "value": {
+            "op": "cell.relative",
+            "args": {
+              "base": "record_anchor",
+              "row_offset": 0,
+              "column_offset": 0
+            }
+          }
+        }
+      },
+      "context": {},
+      "extractors": [
+        {
+          "extractor_id": "schedule_header",
+          "input": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "operator": {
+            "op": "extract.regex",
+            "args": {
+              "patterns": [
+                {
+                  "pattern": "^\\s*(?P<date>\\d{2}\\.\\d{2}\\.\\d{4})\\s+(?P<time>\\d{1,2}:\\d{2})\\s+CET\\s*$",
+                  "flags": [
+                    "IGNORECASE"
+                  ]
+                }
+              ],
+              "named_outputs": [
+                "date",
+                "time"
+              ]
+            }
+          },
+          "on_failure": "null"
+        }
+      ],
+      "fields": {
+        "date": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "schedule_header",
+                "output": "date"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_date",
+                "args": {
+                  "formats": [
+                    "%d.%m.%Y"
+                  ],
+                  "locale": "en"
+                }
+              },
+              {
+                "op": "datetime.format_date",
+                "args": {
+                  "format": "%Y-%m-%d"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local playoff date parsed from the cached bracket timestamp.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "time": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "schedule_header",
+                "output": "time"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_time",
+                "args": {
+                  "formats": [
+                    "%H:%M"
+                  ]
+                }
+              },
+              {
+                "op": "datetime.format_time",
+                "args": {
+                  "format": "%H:%M"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local playoff time parsed from the cached bracket timestamp.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_a": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 1,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "First bracket participant; TBD only when the dated slot exists and the cell is unpublished.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_b": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 2,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "Second bracket participant; TBD only when the dated slot exists and the cell is unpublished.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stage": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Playoffs"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "Stable phase label from the Play-Off sheet.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "bo": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "BO3"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "INFO!A20-A21 state playoff and Grand Final matches are Bo3.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "match_label": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Lower Bracket Quarterfinals"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "Bracket round label.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "additional_fields": {},
+      "overrides": [],
+      "provenance": {
+        "enabled": true,
+        "include_source_coordinates": true,
+        "include_transform_chain": true,
+        "include_override_reason": true
+      }
+    },
+    {
+      "record_set_id": "upper_bracket_final",
+      "enabled": true,
+      "source_id": "playoffs",
+      "locator": {
+        "op": "records.tile_grid",
+        "args": {
+          "tiles": [
+            {
+              "tile_id": "upper_bracket_final_1",
+              "origin": "L13",
+              "record_row_offsets": [
+                0
+              ]
+            }
+          ],
+          "record_anchor": {
+            "base": "tile_origin",
+            "column_offset": 0
+          },
+          "emit_order": "tiles_then_row_offsets"
+        }
+      },
+      "filter": {
+        "op": "predicate.not_empty",
+        "args": {
+          "value": {
+            "op": "cell.relative",
+            "args": {
+              "base": "record_anchor",
+              "row_offset": 0,
+              "column_offset": 0
+            }
+          }
+        }
+      },
+      "context": {},
+      "extractors": [
+        {
+          "extractor_id": "schedule_header",
+          "input": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "operator": {
+            "op": "extract.regex",
+            "args": {
+              "patterns": [
+                {
+                  "pattern": "^\\s*(?P<date>\\d{2}\\.\\d{2}\\.\\d{4})\\s+(?P<time>\\d{1,2}:\\d{2})\\s+CET\\s*$",
+                  "flags": [
+                    "IGNORECASE"
+                  ]
+                }
+              ],
+              "named_outputs": [
+                "date",
+                "time"
+              ]
+            }
+          },
+          "on_failure": "null"
+        }
+      ],
+      "fields": {
+        "date": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "schedule_header",
+                "output": "date"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_date",
+                "args": {
+                  "formats": [
+                    "%d.%m.%Y"
+                  ],
+                  "locale": "en"
+                }
+              },
+              {
+                "op": "datetime.format_date",
+                "args": {
+                  "format": "%Y-%m-%d"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local playoff date parsed from the cached bracket timestamp.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "time": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "schedule_header",
+                "output": "time"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_time",
+                "args": {
+                  "formats": [
+                    "%H:%M"
+                  ]
+                }
+              },
+              {
+                "op": "datetime.format_time",
+                "args": {
+                  "format": "%H:%M"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local playoff time parsed from the cached bracket timestamp.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_a": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 1,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "First bracket participant; TBD only when the dated slot exists and the cell is unpublished.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_b": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 2,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "Second bracket participant; TBD only when the dated slot exists and the cell is unpublished.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stage": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Playoffs"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "Stable phase label from the Play-Off sheet.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "bo": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "BO3"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "INFO!A20-A21 state playoff and Grand Final matches are Bo3.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "match_label": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Upper Bracket Final"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "Bracket round label.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "additional_fields": {},
+      "overrides": [],
+      "provenance": {
+        "enabled": true,
+        "include_source_coordinates": true,
+        "include_transform_chain": true,
+        "include_override_reason": true
+      }
+    },
+    {
+      "record_set_id": "lower_bracket_semifinal",
+      "enabled": true,
+      "source_id": "playoffs",
+      "locator": {
+        "op": "records.tile_grid",
+        "args": {
+          "tiles": [
+            {
+              "tile_id": "lower_bracket_semifinal_1",
+              "origin": "I34",
+              "record_row_offsets": [
+                0
+              ]
+            }
+          ],
+          "record_anchor": {
+            "base": "tile_origin",
+            "column_offset": 0
+          },
+          "emit_order": "tiles_then_row_offsets"
+        }
+      },
+      "filter": {
+        "op": "predicate.not_empty",
+        "args": {
+          "value": {
+            "op": "cell.relative",
+            "args": {
+              "base": "record_anchor",
+              "row_offset": 0,
+              "column_offset": 0
+            }
+          }
+        }
+      },
+      "context": {},
+      "extractors": [
+        {
+          "extractor_id": "schedule_header",
+          "input": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "operator": {
+            "op": "extract.regex",
+            "args": {
+              "patterns": [
+                {
+                  "pattern": "^\\s*(?P<date>\\d{2}\\.\\d{2}\\.\\d{4})\\s+(?P<time>\\d{1,2}:\\d{2})\\s+CET\\s*$",
+                  "flags": [
+                    "IGNORECASE"
+                  ]
+                }
+              ],
+              "named_outputs": [
+                "date",
+                "time"
+              ]
+            }
+          },
+          "on_failure": "null"
+        }
+      ],
+      "fields": {
+        "date": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "schedule_header",
+                "output": "date"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_date",
+                "args": {
+                  "formats": [
+                    "%d.%m.%Y"
+                  ],
+                  "locale": "en"
+                }
+              },
+              {
+                "op": "datetime.format_date",
+                "args": {
+                  "format": "%Y-%m-%d"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local playoff date parsed from the cached bracket timestamp.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "time": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "schedule_header",
+                "output": "time"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_time",
+                "args": {
+                  "formats": [
+                    "%H:%M"
+                  ]
+                }
+              },
+              {
+                "op": "datetime.format_time",
+                "args": {
+                  "format": "%H:%M"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local playoff time parsed from the cached bracket timestamp.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_a": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 1,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "First bracket participant; TBD only when the dated slot exists and the cell is unpublished.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_b": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 2,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "Second bracket participant; TBD only when the dated slot exists and the cell is unpublished.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stage": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Playoffs"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "Stable phase label from the Play-Off sheet.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "bo": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "BO3"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "INFO!A20-A21 state playoff and Grand Final matches are Bo3.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "match_label": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Lower Bracket Semifinal"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "Bracket round label.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "additional_fields": {},
+      "overrides": [],
+      "provenance": {
+        "enabled": true,
+        "include_source_coordinates": true,
+        "include_transform_chain": true,
+        "include_override_reason": true
+      }
+    },
+    {
+      "record_set_id": "lower_bracket_final",
+      "enabled": true,
+      "source_id": "playoffs",
+      "locator": {
+        "op": "records.tile_grid",
+        "args": {
+          "tiles": [
+            {
+              "tile_id": "lower_bracket_final_1",
+              "origin": "L34",
+              "record_row_offsets": [
+                0
+              ]
+            }
+          ],
+          "record_anchor": {
+            "base": "tile_origin",
+            "column_offset": 0
+          },
+          "emit_order": "tiles_then_row_offsets"
+        }
+      },
+      "filter": {
+        "op": "predicate.not_empty",
+        "args": {
+          "value": {
+            "op": "cell.relative",
+            "args": {
+              "base": "record_anchor",
+              "row_offset": 0,
+              "column_offset": 0
+            }
+          }
+        }
+      },
+      "context": {},
+      "extractors": [
+        {
+          "extractor_id": "schedule_header",
+          "input": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "operator": {
+            "op": "extract.regex",
+            "args": {
+              "patterns": [
+                {
+                  "pattern": "^\\s*(?P<date>\\d{2}\\.\\d{2}\\.\\d{4})\\s+(?P<time>\\d{1,2}:\\d{2})\\s+CET\\s*$",
+                  "flags": [
+                    "IGNORECASE"
+                  ]
+                }
+              ],
+              "named_outputs": [
+                "date",
+                "time"
+              ]
+            }
+          },
+          "on_failure": "null"
+        }
+      ],
+      "fields": {
+        "date": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "schedule_header",
+                "output": "date"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_date",
+                "args": {
+                  "formats": [
+                    "%d.%m.%Y"
+                  ],
+                  "locale": "en"
+                }
+              },
+              {
+                "op": "datetime.format_date",
+                "args": {
+                  "format": "%Y-%m-%d"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local playoff date parsed from the cached bracket timestamp.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "time": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "schedule_header",
+                "output": "time"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_time",
+                "args": {
+                  "formats": [
+                    "%H:%M"
+                  ]
+                }
+              },
+              {
+                "op": "datetime.format_time",
+                "args": {
+                  "format": "%H:%M"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local playoff time parsed from the cached bracket timestamp.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_a": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 1,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "First bracket participant; TBD only when the dated slot exists and the cell is unpublished.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_b": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 2,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "Second bracket participant; TBD only when the dated slot exists and the cell is unpublished.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stage": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Playoffs"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "Stable phase label from the Play-Off sheet.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "bo": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "BO3"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "INFO!A20-A21 state playoff and Grand Final matches are Bo3.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "match_label": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Lower Bracket Final"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "Bracket round label.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "additional_fields": {},
+      "overrides": [],
+      "provenance": {
+        "enabled": true,
+        "include_source_coordinates": true,
+        "include_transform_chain": true,
+        "include_override_reason": true
+      }
+    },
+    {
+      "record_set_id": "grand_final",
+      "enabled": true,
+      "source_id": "playoffs",
+      "locator": {
+        "op": "records.tile_grid",
+        "args": {
+          "tiles": [
+            {
+              "tile_id": "grand_final_1",
+              "origin": "P23",
+              "record_row_offsets": [
+                0
+              ]
+            }
+          ],
+          "record_anchor": {
+            "base": "tile_origin",
+            "column_offset": 0
+          },
+          "emit_order": "tiles_then_row_offsets"
+        }
+      },
+      "filter": {
+        "op": "predicate.not_empty",
+        "args": {
+          "value": {
+            "op": "cell.relative",
+            "args": {
+              "base": "record_anchor",
+              "row_offset": 0,
+              "column_offset": 0
+            }
+          }
+        }
+      },
+      "context": {},
+      "extractors": [
+        {
+          "extractor_id": "schedule_header",
+          "input": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "operator": {
+            "op": "extract.regex",
+            "args": {
+              "patterns": [
+                {
+                  "pattern": "^\\s*(?P<date>\\d{2}\\.\\d{2}\\.\\d{4})\\s+(?P<time>\\d{1,2}:\\d{2})\\s+CET\\s*$",
+                  "flags": [
+                    "IGNORECASE"
+                  ]
+                }
+              ],
+              "named_outputs": [
+                "date",
+                "time"
+              ]
+            }
+          },
+          "on_failure": "null"
+        }
+      ],
+      "fields": {
+        "date": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "schedule_header",
+                "output": "date"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_date",
+                "args": {
+                  "formats": [
+                    "%d.%m.%Y"
+                  ],
+                  "locale": "en"
+                }
+              },
+              {
+                "op": "datetime.format_date",
+                "args": {
+                  "format": "%Y-%m-%d"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local playoff date parsed from the cached bracket timestamp.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "time": {
+          "value": {
+            "source": {
+              "op": "extractor.output",
+              "args": {
+                "extractor_id": "schedule_header",
+                "output": "time"
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_time",
+                "args": {
+                  "formats": [
+                    "%H:%M"
+                  ]
+                }
+              },
+              {
+                "op": "datetime.format_time",
+                "args": {
+                  "format": "%H:%M"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local playoff time parsed from the cached bracket timestamp.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_a": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 1,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "First bracket participant; TBD only when the dated slot exists and the cell is unpublished.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_b": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 3,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "Second bracket participant; TBD only when the dated slot exists and the cell is unpublished.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stage": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Playoffs"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "Stable phase label from the Play-Off sheet.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "bo": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "BO3"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "INFO!A20-A21 state playoff and Grand Final matches are Bo3.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "match_label": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Grand Final"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "null",
+          "default": null,
+          "description": "Bracket round label.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "additional_fields": {},
+      "overrides": [],
+      "provenance": {
+        "enabled": true,
+        "include_source_coordinates": true,
+        "include_transform_chain": true,
+        "include_override_reason": true
+      }
+    }
+  ],
+  "normalization": {
+    "strings": {
+      "trim": true,
+      "collapse_internal_whitespace": true,
+      "replace_line_breaks_with_space": true,
+      "preserve_casing": true
+    },
+    "datetime": {
+      "precedence": [
+        "date_plus_time"
+      ],
+      "timezone_fallback": "tournament.base_timezone",
+      "dst_policy": "iana",
+      "utc_output_format": "%Y-%m-%dT%H:%M:%SZ",
+      "ambiguous_time_policy": "blocking_error",
+      "nonexistent_time_policy": "blocking_error"
+    },
+    "teams": {
+      "allow_placeholders": true,
+      "placeholder_values": [
+        "TBD",
+        "TBA"
+      ],
+      "placeholder_patterns": [
+        "^(Winner|Loser)\\s+M\\d+$",
+        "^Seed\\s+#?\\d+$",
+        "^Qualifier\\s+\\d+$"
+      ]
+    },
+    "best_of": {
+      "normalize": true,
+      "output_format": "BO{n}"
+    }
+  },
+  "validation": {
+    "blocking_fields": [
+      "date",
+      "time",
+      "team_a",
+      "team_b"
+    ],
+    "warning_fields": [
+      "stage",
+      "bo",
+      "match_label"
+    ],
+    "duplicate_check": {
+      "enabled": true,
+      "severity": "warning",
+      "fields": [
+        "start_time_utc",
+        "team_a",
+        "team_b"
+      ],
+      "team_order_sensitive": true
+    },
+    "record_count": {
+      "minimum": 34,
+      "maximum": 34,
+      "on_violation": "blocking_error"
+    },
+    "custom_rules": []
+  },
+  "output": {
+    "model": "neto.normalized_match.v1",
+    "columns": [
+      "date_original",
+      "time_original",
+      "timezone",
+      "start_time_utc",
+      "team_a",
+      "team_b",
+      "stage",
+      "bo",
+      "match_label",
+      "row_status"
+    ],
+    "csv_columns": [
+      "date_original",
+      "time_original",
+      "timezone",
+      "start_time_utc",
+      "team_a",
+      "team_b",
+      "stage",
+      "bo",
+      "match_label",
+      "row_status"
+    ],
+    "preserve_source_order": true,
+    "include_provenance_in_internal_result": true,
+    "sort": []
+  },
+  "extensions": {
+    "plugins": [],
+    "custom_config": {}
+  },
+  "metadata": {
+    "created_at": "2026-07-15T17:15:02Z",
+    "created_by": "NETO ParserKey Builder",
+    "updated_at": null,
+    "source_files": [
+      {
+        "filename": "United21 season 52.xlsx",
+        "sha256": "a1ee619cc61a4466cb3f85357202b2595d25c7877856ba5df53031a6d701cb43"
+      }
+    ],
+    "notes": "Draft for the effective NETO v2 runtime. Uses cached values from the formula-backed Group Stage and Play-Off sheets. The workbook labels July times as CET; Europe/Berlin is a proposed civil-time mapping and requires owner confirmation because fixed CET (UTC+1) would shift every UTC result by one hour. Playoff record sets are declared in event chronology because the source is a spatial bracket.",
+    "tags": [
+      "united21",
+      "season_52",
+      "counter_strike_2",
+      "cached_formulas",
+      "tile_grid",
+      "bracket",
+      "timezone_confirmation_required"
+    ]
+  }
+}

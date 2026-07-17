@@ -5,7 +5,7 @@
   "status": "enabled",
   "tournament": {
     "name": "CCT 2026 South America Series 3",
-    "base_timezone": "America/Lima",
+    "base_timezone": "America/Sao_Paulo",
     "timezone_source": "parser_key"
   },
   "source_expectations": {
@@ -114,11 +114,11 @@
     "source_workbook_sheets": ["General", "Bracket", "Schedule", "Data"],
     "source_schedule_range": "Schedule!A1:V49",
     "source_event_name_cell": "General!D3",
-    "timezone_inference_note": "Workbook has Schedule!F Start Time = Schedule!E Local Time + Data!A13. Data!A13 is 05:00, so Local Time appears to be UTC-05:00. ParserKey uses America/Lima as IANA timezone. Operator should confirm if the intended local timezone is another UTC-05 zone.",
+    "timezone_inference_note": "Workbook has Schedule!F Start Time = Schedule!E Local Time + Data!A13. Data!A13 is 05:00. For this tournament, Local Time means Brazil time, so the ParserKey uses America/Sao_Paulo as the IANA timezone.",
     "parse_sanity_check": {
       "non_empty_mapped_rows_detected": 48,
-      "first_match_expected_utc": "2026-06-27T15:00:00Z",
-      "last_match_expected_utc": "2026-07-09T23:00:00Z"
+      "first_match_expected_utc": "2026-06-27T13:00:00Z",
+      "last_match_expected_utc": "2026-07-09T21:00:00Z"
     },
     "notes": "MVP key for linear Schedule sheet. Uses column E Local Time + base timezone for UTC normalization. Column F Start Time is retained only as an auxiliary check, not as primary parse input. Scores and map scores are out of MVP output."
   }
