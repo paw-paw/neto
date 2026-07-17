@@ -15,7 +15,7 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Choose **Google Sheets** to load a public native spreadsheet, or open **Upload XLSX (fallback)** for a local workbook. Review NETO's existing structural ParserKey suggestions, explicitly confirm a key, and click **Run Parse**. Choose **Official Website** to select an official source, inclusive date range, and range timezone. Choose **Tournament Page** for a Leaguepedia / LoL Fandom event URL. Each ingestion method has a short hover explanation. Export is enabled only when the result status is `parsed` or `parsed_with_warnings`.
+Choose the **Google Sheets**, **Official Website**, or **Tournament Page** tab. Google Sheets can load a public native spreadsheet or open **Upload XLSX (fallback)** for a local workbook; review NETO's structural ParserKey suggestions, explicitly confirm a key, and click **Run Parse**. Official Website accepts a source, inclusive date range, and range timezone. Tournament Page accepts a Leaguepedia / LoL Fandom event URL. Export is enabled only when the result status is `parsed` or `parsed_with_warnings`.
 
 The interface uses a compact multi-column dashboard on wide displays and automatically stacks the same workflow vertically on narrow or near-square viewports. Findings, validation issues, and export controls share a summary row; the match table always uses the full content width below it.
 
@@ -26,7 +26,7 @@ The match table prioritizes natural date/time values, teams, BO, and stage. Its 
 - Descending start-time sorting by default, with ascending sorting available.
 - Free-text search across teams, stage, and match label.
 - Stage and row-status filters in the same row as visible matches and schedule timezone.
-- Collapsed source-metadata filters for Competition and Match state when available.
+- Competition and Match state filters in the same toolbar row when source metadata is available.
 
 The table header also shows visible/total matches and the ParserKey schedule timezone.
 

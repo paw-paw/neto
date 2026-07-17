@@ -20,6 +20,16 @@ OUTPUT_COLUMNS: tuple[str, ...] = (
 )
 
 
+def parser_key_status(parser_key: object) -> str:
+    """Read status from current or pre-status ParserKey instances safely."""
+
+    raw_data = getattr(parser_key, "raw_data", {})
+    if not isinstance(raw_data, dict):
+        return "enabled"
+    value = raw_data.get("status")
+    return value if isinstance(value, str) and value else "enabled"
+
+
 @dataclass(frozen=True)
 class ParserKey:
     parser_key_id: str
@@ -42,8 +52,7 @@ class ParserKey:
 
     @property
     def status(self) -> str:
-        value = self.raw_data.get("status")
-        return value if isinstance(value, str) and value else "enabled"
+        return parser_key_status(self)
 
 
 @dataclass(frozen=True)
