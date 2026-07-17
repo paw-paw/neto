@@ -357,6 +357,7 @@ def _issues_summary(result: ParseResult) -> pd.DataFrame:
 
 def _render_key_summary(parser_key: ParserKey) -> None:
     st.markdown(f"**{parser_key.key_name}**")
+    st.caption(f"Status · {parser_key.status.title()}")
     st.caption(f"Tournament · {parser_key.tournament_name}")
     st.caption(f"Timezone · {parser_key.base_timezone or '(missing)'}")
     st.caption(f"Sheet · {parser_key.target_sheet}")
@@ -366,28 +367,32 @@ def _render_key_summary(parser_key: ParserKey) -> None:
 def _render_suggestions(suggestions: list[ParserKeySuggestion]) -> None:
     st.markdown("**Structural matches**")
     if not suggestions:
-        st.info("No ParserKeys are available to rank.")
+        st.warning(
+            "No reliable structural match was found. Create or upload a ParserKey for this workbook."
+        )
         return
     strongest = suggestions[0]
     reason = " · ".join(strongest.reasons) or "No strong structural signals."
+    status = " · Draft" if strongest.parser_key.status == "draft" else ""
     if strongest.confidence == "Low":
         st.warning(
-            "No confident ParserKey match was found. Review the best available candidates manually."
+            "Only a low structural match was found. Review it manually before confirming."
         )
         st.markdown(
             f"**Best available:** {strongest.parser_key.key_name} · "
-            f"{strongest.confidence} ({strongest.score}/100)"
+            f"{strongest.confidence} structural match ({strongest.score}/100){status}"
         )
         st.caption(reason)
     else:
         st.success(
             f"Recommended · {strongest.parser_key.key_name} · "
-            f"{strongest.confidence} confidence · {reason}"
+            f"{strongest.confidence} structural match{status} · {reason}"
         )
     for index, suggestion in enumerate(suggestions[1:], start=2):
+        status = " · Draft" if suggestion.parser_key.status == "draft" else ""
         st.markdown(
             f"**Candidate {index}:** {suggestion.parser_key.key_name} "
-            f"· {suggestion.confidence} ({suggestion.score}/100)"
+            f"· {suggestion.confidence} structural match ({suggestion.score}/100){status}"
         )
         st.caption(" · ".join(suggestion.reasons) or "No strong structural signals.")
 
