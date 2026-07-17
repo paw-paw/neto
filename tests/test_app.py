@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import runpy
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -9,7 +10,9 @@ from openpyxl import load_workbook
 from streamlit.testing.v1 import AppTest
 
 import app as app_module
+import parser as parser_package
 from app import (
+    _parser_key_status,
     _presentation_dataframe,
     _timezone_options,
     _validated_browser_timezone,
@@ -21,7 +24,6 @@ from parser.models import (
     ParseResult,
     ParsedMatch,
     ParserKeyCatalog,
-    parser_key_status,
 )
 from parser.presentation import canonical_view_dataframe, presentation_dataframe
 from parser.ui_exports import canonical_csv_bytes, markdown_bytes, pdf_bytes, xlsx_bytes
@@ -257,7 +259,7 @@ def test_google_sheet_suggestions_accept_legacy_parserkey_instances(monkeypatch)
     )
     legacy = SimpleNamespace(**current.__dict__, select_label=current.select_label)
     assert not hasattr(legacy, "status")
-    assert parser_key_status(legacy) == "enabled"
+    assert _parser_key_status(legacy) == "enabled"
 
     monkeypatch.setattr("parser.load_parser_keys", lambda _: ParserKeyCatalog([legacy], []))
     monkeypatch.setattr("google_sheets.fetch_google_sheet", lambda value: fetched)
@@ -269,6 +271,19 @@ def test_google_sheet_suggestions_accept_legacy_parserkey_instances(monkeypatch)
 
     assert not app_test.exception
     assert any("Structural matches" in item.value for item in app_test.markdown)
+
+
+def test_app_bootstraps_with_cached_parser_package_without_status_export(
+    monkeypatch,
+) -> None:
+    monkeypatch.delattr(parser_package, "parser_key_status")
+
+    namespace = runpy.run_path(
+        str(ROOT / "app.py"),
+        run_name="neto_cached_parser_package_regression",
+    )
+
+    assert callable(namespace["_parser_key_status"])
 
 
 def test_ingestion_methods_use_tabs_and_timezones_are_searchable() -> None:
