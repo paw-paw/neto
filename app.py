@@ -29,7 +29,6 @@ from parser import (
     load_parser_keys,
     normalize_parser_key,
     parse_workbook,
-    parser_key_status,
     rank_parser_keys,
     validate_parser_key_upload,
 )
@@ -71,6 +70,16 @@ INGESTION_METHODS = (
     "Official Website",
     "Tournament Page",
 )
+
+
+def _parser_key_status(parser_key: object) -> str:
+    """Read status without requiring a newly imported ParserKey API."""
+
+    raw_data = getattr(parser_key, "raw_data", {})
+    if not isinstance(raw_data, dict):
+        return "enabled"
+    value = raw_data.get("status")
+    return value if isinstance(value, str) and value else "enabled"
 
 
 def _data_uri(path: Path, mime_type: str) -> str:
@@ -337,7 +346,7 @@ def _issues_summary(result: ParseResult) -> pd.DataFrame:
 
 def _render_key_summary(parser_key: ParserKey) -> None:
     st.markdown(f"**{parser_key.key_name}**")
-    st.caption(f"Status · {parser_key_status(parser_key).title()}")
+    st.caption(f"Status · {_parser_key_status(parser_key).title()}")
     st.caption(f"Tournament · {parser_key.tournament_name}")
     st.caption(f"Timezone · {parser_key.base_timezone or '(missing)'}")
     st.caption(f"Sheet · {parser_key.target_sheet}")
@@ -354,7 +363,7 @@ def _render_suggestions(suggestions: list[ParserKeySuggestion]) -> None:
     strongest = suggestions[0]
     reason = " · ".join(strongest.reasons) or "No strong structural signals."
     status = (
-        " · Draft" if parser_key_status(strongest.parser_key) == "draft" else ""
+        " · Draft" if _parser_key_status(strongest.parser_key) == "draft" else ""
     )
     if strongest.confidence == "Low":
         st.warning(
@@ -372,7 +381,7 @@ def _render_suggestions(suggestions: list[ParserKeySuggestion]) -> None:
         )
     for index, suggestion in enumerate(suggestions[1:], start=2):
         status = (
-            " · Draft" if parser_key_status(suggestion.parser_key) == "draft" else ""
+            " · Draft" if _parser_key_status(suggestion.parser_key) == "draft" else ""
         )
         st.markdown(
             f"**Candidate {index}:** {suggestion.parser_key.key_name} "
