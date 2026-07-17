@@ -55,9 +55,9 @@ The local **Upload XLSX (fallback)** path intentionally remains available and fo
 
 ## ParserKey boundary and known limitations
 
-This provider only changes how XLSX bytes reach NETO. It does not change ParserKey ranking, confidence, record-count contracts, formula policies, field requirements, warnings, or blocking errors.
+This provider only changes how XLSX bytes reach NETO. The shared recommender and parser receive the same workbook bytes as the XLSX fallback. The provider itself does not change record-count contracts, formula policies, field requirements, warnings, or blocking errors.
 
-Consequently, a public sheet can download successfully while its selected ParserKey reports warnings or a blocked result because the live document differs from the snapshot used to create the key. CCT SA4 may be manually paired with the CCT SA3 key when users know the structure is compatible. Ranking anomalies for Exort and BetBoom, zero-score candidate presentation, exact record-count failures, and updates required by the StarSeries draft key are tracked as future ParserKey work.
+Consequently, a public sheet can download successfully while its selected ParserKey reports warnings or a blocked result because the live document differs from the snapshot used to create the key. The bounded structural recommender automatically recognizes CCT SA4 as compatible with the SA3 key and Exort Series 30 as compatible with the Series 29 key; it hides zero-score candidates. Exact record-count failures, missing formula caches or required fields, and updates required by draft keys remain ParserKey/runtime work rather than Google Sheets transport failures.
 
 The bundled StarSeries S20 Barcelona key is registered as `draft`. It passes the current schema/runtime acceptance gates, but its current public sheet has diverged from the key's extraction and exact-count expectations; no compatibility claim is made in this release.
 
@@ -68,4 +68,4 @@ Streamlit Community Cloud needs outbound HTTPS access to:
 - `docs.google.com`;
 - Google-owned `*.googleusercontent.com` download hosts used by redirects.
 
-There are no required secrets. Normal tests use mocked HTTP responses. `tests/test_google_sheets_live.py` is opt-in through `NETO_RUN_LIVE_TESTS=1` and verifies transport only.
+There are no required secrets. Normal tests use mocked HTTP responses. The 14-case public corpus is stored in `tests/fixtures/public_google_sheets_cases.json`; `tests/test_google_sheets_live.py` is opt-in through `NETO_RUN_LIVE_TESTS=1` and verifies safe export plus expected top-ranked ParserKey identity. Full parser outcomes stay in separate regression checks.

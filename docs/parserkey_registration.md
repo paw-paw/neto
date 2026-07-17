@@ -5,12 +5,12 @@
 `parser/suggestions.py` opens the workbook read-only and builds a bounded fingerprint from:
 
 - exact and case-compatible sheet names;
-- the first 32 rows and 40 columns of each sheet;
-- header/content tokens relevant to mapped fields;
-- workbook sheet dimensions compared with the key's declared rows, anchors, and cells;
-- source filenames and tournament/key identity metadata already present in the ParserKey.
+- an unconditional maximum of 32 rows and 40 columns per sheet, including Google exports that omit worksheet dimensions;
+- v0 header/mapped-column probes and v2 row-range, anchor-column, tile-origin, relative-cell, context, and extractor probes derived from the existing ParserKey contract;
+- known per-sheet dimensions compared with that sheet's own declared requirements, while unknown dimensions remain neutral;
+- Unicode-aware tournament-family and source-filename identity, with edition numbers handled separately so a compatible edition X key can rank for edition X+1.
 
-The matcher does not execute complete v0 or v2 parsers. It returns at most three candidates with a 0–100 advisory score, High/Medium/Low confidence, and concise reasons. A low-scoring first candidate is labeled “Best available,” not as a confident recommendation. The user must select and explicitly confirm a key before **Run Parse** is enabled.
+The matcher does not execute complete v0 or v2 parsers. It returns at most three positive-score candidates with a 0–100 advisory score, High/Medium/Low structural-match strength, runner-up-aware confidence, and concise reasons. Zero-score candidates are omitted and a top score below the no-match floor returns no recommendation. Draft/enabled status is displayed separately from structural strength. The user must select and explicitly confirm a key before **Run Parse** is enabled.
 
 ## Upload acceptance gates
 
