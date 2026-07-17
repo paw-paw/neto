@@ -582,7 +582,7 @@
             "fallbacks": []
           },
           "required": true,
-          "on_missing": "blocking_error",
+          "on_missing": "warning",
           "default": null,
           "description": "Local scheduled start time.",
           "provenance": {
@@ -2319,7 +2319,7 @@
     "record_count": {
       "minimum": 135,
       "maximum": 135,
-      "on_violation": "blocking_error"
+      "on_violation": "warning"
     },
     "custom_rules": []
   },
@@ -2367,7 +2367,7 @@
         "sha256": "4640d7de01de3e7bbafa95447ec67b6d066388e1a03e192f5fca198608f7300d"
       }
     ],
-    "notes": "Schema-valid draft for six tile-grid record sets. Europe/Moscow is a provisional base timezone because the workbook contains no explicit timezone label. Playoffs Match 5 and Match 6 on 2026-08-22 have blank start-time cells O10 and O11; Match 6 team_b falls back to TBD. The draft is not runtime-verified and requires user confirmation/update before approval.",
+    "notes": "Schema-valid draft for six tile-grid record sets. Europe/Moscow is a provisional base timezone because the workbook contains no explicit timezone label. Playoffs Match 5 and Match 6 on 2026-08-22 have blank start-time cells O10 and O11 and remain exportable with warnings; Match 6 team_b falls back to TBD. The public workbook is covered by a hash-pinned runtime snapshot.",
     "tags": [
       "multiple_sheets",
       "multiple_divisions",

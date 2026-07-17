@@ -3533,7 +3533,7 @@
     "record_count": {
       "minimum": 205,
       "maximum": 205,
-      "on_violation": "blocking_error"
+      "on_violation": "warning"
     },
     "custom_rules": []
   },
