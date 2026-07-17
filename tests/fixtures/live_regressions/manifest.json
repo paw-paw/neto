@@ -1,0 +1,109 @@
+{
+  "manifest_version": "neto.parserkey_live_regressions.v1",
+  "captured_at": "2026-07-17",
+  "source": "Public Google Sheets XLSX export URLs catalogued in public_google_sheets_cases.json",
+  "entries": [
+    {
+      "case_id": "stake_ranked_episode_3",
+      "filename": "stake_ranked_episode_3.xlsx",
+      "sha256": "05168f22b7912eda581dd5da9cbb889567f0ff4b99952ec0fff49942711b7c53",
+      "parser_key_id": "stake_ranked_episode_3_offline_main_event_v1",
+      "matches": 14,
+      "status": "parsed",
+      "blocking_errors": 0,
+      "warnings": 0,
+      "issue_codes": []
+    },
+    {
+      "case_id": "betboom_rush_b_summit_part_four",
+      "filename": "betboom_rush_b_summit_part_four.xlsx",
+      "sha256": "f0f4bca5a19d44c7769bf6db9bac8a6a9cbcde4c4b5586cdce9c867c76f9099a",
+      "parser_key_id": "betboom_rush_b_summit_part_four_v1",
+      "matches": 11,
+      "status": "parsed_with_warnings",
+      "blocking_errors": 0,
+      "warnings": 1,
+      "issue_codes": [
+        "record_count_mismatch"
+      ]
+    },
+    {
+      "case_id": "cct_2026_south_america_4",
+      "filename": "cct_2026_south_america_4.xlsx",
+      "sha256": "5eb746ab41042bf86dadd20f241c5cf652a3b65f7e202353f3e9df78fd8d9481",
+      "parser_key_id": "cct_2026_sa3_public_schedule_v1",
+      "matches": 48,
+      "status": "parsed",
+      "blocking_errors": 0,
+      "warnings": 0,
+      "issue_codes": []
+    },
+    {
+      "case_id": "exort_series_30",
+      "filename": "exort_series_30.xlsx",
+      "sha256": "74cdcf032c7bf7d9850d1078dbaf5f065bd9fa2d3bdc66047c9d40d46152d083",
+      "parser_key_id": "exort_series_29_v1",
+      "matches": 77,
+      "status": "parsed_with_warnings",
+      "blocking_errors": 0,
+      "warnings": 111,
+      "issue_codes": [
+        "formula_cached_value_missing",
+        "record_count_mismatch"
+      ]
+    },
+    {
+      "case_id": "starseries_s20_barcelona_2026",
+      "filename": "starseries_s20_barcelona_2026.xlsx",
+      "sha256": "8f8f2979792e13ab2417c59115e5b4430ffcaf450d2771f84bc822385c72bd23",
+      "parser_key_id": "starseries_s20_barcelona_2026_v1",
+      "matches": 68,
+      "status": "parsed_with_warnings",
+      "blocking_errors": 0,
+      "warnings": 14,
+      "issue_codes": [
+        "time_pending"
+      ]
+    },
+    {
+      "case_id": "esports_world_cup_2026_dota2",
+      "filename": "esports_world_cup_2026_dota2.xlsx",
+      "sha256": "1fb04ab7da8c657a3b9b2ab991c0e4660180e575a38d12045ae3ed8b28a1bde7",
+      "parser_key_id": "esports_world_cup_2026_dota2_v1",
+      "matches": 89,
+      "status": "parsed_with_warnings",
+      "blocking_errors": 0,
+      "warnings": 3,
+      "issue_codes": [
+        "formula_cached_value_missing",
+        "record_count_mismatch"
+      ]
+    },
+    {
+      "case_id": "lunar_horse_trophy_8",
+      "filename": "lunar_horse_trophy_8.xlsx",
+      "sha256": "40eb3b95ed56de8a8f3085bc68dc4d1858eec6a2fbaa1d64ab1acfe8269d78ff",
+      "parser_key_id": "lunar_horse_trophy_8_v1",
+      "matches": 36,
+      "status": "parsed_with_warnings",
+      "blocking_errors": 0,
+      "warnings": 8,
+      "issue_codes": [
+        "missing_time"
+      ]
+    },
+    {
+      "case_id": "betboom_rise_of_legends_10",
+      "filename": "betboom_rise_of_legends_10.xlsx",
+      "sha256": "c397c4061e393be167faf4612e2d44878c64a96d01c414ac9ffcbf016c770057",
+      "parser_key_id": "betboom_rise_of_legends_10_v1",
+      "matches": 135,
+      "status": "parsed_with_warnings",
+      "blocking_errors": 0,
+      "warnings": 2,
+      "issue_codes": [
+        "missing_time"
+      ]
+    }
+  ]
+}

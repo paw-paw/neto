@@ -56,8 +56,14 @@ def test_public_google_sheet_exports_and_ranks_as_expected(
         parser_key = key_by_id[parse_expectation["parser_key_id"]]
         result = parse_fetched_google_sheet(fetched, parser_key)
         assert result.status == parse_expectation["status"]
+        assert result.exportable
         assert result.total_matches == parse_expectation["matches"]
         assert result.errors_count == parse_expectation["blocking_errors"]
+        assert result.warnings_count == parse_expectation["warnings"]
         assert sorted({issue.code for issue in result.issues}) == sorted(
             parse_expectation["issue_codes"]
         )
+        for match in result.matches:
+            for value in match.as_output_dict().values():
+                assert not str(value).lstrip().startswith("=")
+                assert "openpyxl" not in str(value).casefold()

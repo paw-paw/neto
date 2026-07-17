@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import date, time
 
 import pytest
@@ -87,10 +88,48 @@ def test_formula_without_cached_value_is_not_forward_filled() -> None:
     result = parse_workbook(workbook_bytes(rows), make_parser_key())
 
     assert result.status == "blocked"
-    assert result.matches[1].date_original == "=A2+1"
+    assert result.matches[1].date_original == ""
     assert any(
         issue.code == "unparseable_date" and issue.source_row == 3
         for issue in result.issues
+    )
+
+
+def test_v0_empty_participant_policy_uses_tbd_for_plain_blanks() -> None:
+    key = replace(
+        make_parser_key(),
+        raw_data={
+            "validation_rules": {"empty_participant_policy": "use_tbd"}
+        },
+    )
+
+    result = parse_workbook(
+        workbook_bytes([valid_row(team_a=None, team_b=None)]), key
+    )
+
+    assert result.status == "parsed"
+    assert result.matches[0].team_a == result.matches[0].team_b == "TBD"
+    assert "formula_cached_value_missing" not in issue_codes(result)
+
+
+def test_v0_formula_participant_uses_tbd_and_keeps_cache_warning() -> None:
+    key = replace(
+        make_parser_key(),
+        raw_data={
+            "validation_rules": {"empty_participant_policy": "use_tbd"}
+        },
+    )
+
+    result = parse_workbook(
+        workbook_bytes([valid_row(team_a="=C3", team_b="Opponent")]), key
+    )
+
+    assert result.status == "parsed_with_warnings"
+    assert result.matches[0].team_a == "TBD"
+    assert "formula_cached_value_missing" in issue_codes(result)
+    assert not any(
+        str(value).lstrip().startswith("=")
+        for value in result.matches[0].as_output_dict().values()
     )
 
 

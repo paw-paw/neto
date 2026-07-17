@@ -99,7 +99,7 @@ The XLSX workflow also links to the NETO ParserKey Creator Custom GPT and accept
 - Native Excel date/time values are supported, along with documented ISO/day-first date strings and 12/24-hour time strings.
 - The timezone always comes from the ParserKey and is converted with Python `zoneinfo`.
 - ParserKey `output` configuration is informational in v0. The canonical CSV always uses NETO's fixed ten-column output, including `row_status`.
-- Formula cells follow each key's `cached_value_only` or `first_available` policy. Missing caches become visible warnings/fallbacks rather than being silently recalculated.
+- Formula cells use cached scalar values or resolve only safe direct A1 references. Missing caches remain visible diagnostics; formula text and OpenPyXL objects never reach preview/CSV, and `TBD` is used only under an explicit field/key policy.
 - V2 matches retain source sheet, record set, tile, source cell, transform chain, fallback/default use, and override reason internally; these fields are excluded from CSV.
 
 ## Tests

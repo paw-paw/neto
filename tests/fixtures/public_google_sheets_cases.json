@@ -8,7 +8,15 @@
       "compatibility": "exact",
       "acceptable_parser_key_ids": [
         "stake_ranked_episode_3_offline_main_event_v1"
-      ]
+      ],
+      "live_parse_expectation": {
+        "parser_key_id": "stake_ranked_episode_3_offline_main_event_v1",
+        "status": "parsed",
+        "matches": 14,
+        "blocking_errors": 0,
+        "warnings": 0,
+        "issue_codes": []
+      }
     },
     {
       "case_id": "exort_series_29",
@@ -17,7 +25,18 @@
       "compatibility": "exact",
       "acceptable_parser_key_ids": [
         "exort_series_29_v1"
-      ]
+      ],
+      "live_parse_expectation": {
+        "parser_key_id": "exort_series_29_v1",
+        "status": "parsed_with_warnings",
+        "matches": 77,
+        "blocking_errors": 0,
+        "warnings": 9,
+        "issue_codes": [
+          "formula_cached_value_missing",
+          "record_count_mismatch"
+        ]
+      }
     },
     {
       "case_id": "betboom_rush_b_summit_part_four",
@@ -26,7 +45,17 @@
       "compatibility": "exact",
       "acceptable_parser_key_ids": [
         "betboom_rush_b_summit_part_four_v1"
-      ]
+      ],
+      "live_parse_expectation": {
+        "parser_key_id": "betboom_rush_b_summit_part_four_v1",
+        "status": "parsed_with_warnings",
+        "matches": 11,
+        "blocking_errors": 0,
+        "warnings": 1,
+        "issue_codes": [
+          "record_count_mismatch"
+        ]
+      }
     },
     {
       "case_id": "nodwin_clutch_series_10",
@@ -35,7 +64,15 @@
       "compatibility": "exact",
       "acceptable_parser_key_ids": [
         "nodwin_clutch_series_10_v1"
-      ]
+      ],
+      "live_parse_expectation": {
+        "parser_key_id": "nodwin_clutch_series_10_v1",
+        "status": "parsed",
+        "matches": 72,
+        "blocking_errors": 0,
+        "warnings": 0,
+        "issue_codes": []
+      }
     },
     {
       "case_id": "cct_2026_south_america_4",
@@ -44,7 +81,15 @@
       "compatibility": "cross_edition",
       "acceptable_parser_key_ids": [
         "cct_2026_sa3_public_schedule_v1"
-      ]
+      ],
+      "live_parse_expectation": {
+        "parser_key_id": "cct_2026_sa3_public_schedule_v1",
+        "status": "parsed",
+        "matches": 48,
+        "blocking_errors": 0,
+        "warnings": 0,
+        "issue_codes": []
+      }
     },
     {
       "case_id": "exort_series_30",
@@ -53,7 +98,18 @@
       "compatibility": "cross_edition",
       "acceptable_parser_key_ids": [
         "exort_series_29_v1"
-      ]
+      ],
+      "live_parse_expectation": {
+        "parser_key_id": "exort_series_29_v1",
+        "status": "parsed_with_warnings",
+        "matches": 77,
+        "blocking_errors": 0,
+        "warnings": 111,
+        "issue_codes": [
+          "formula_cached_value_missing",
+          "record_count_mismatch"
+        ]
+      }
     },
     {
       "case_id": "starseries_s20_barcelona_2026",
@@ -62,7 +118,17 @@
       "compatibility": "exact",
       "acceptable_parser_key_ids": [
         "starseries_s20_barcelona_2026_v1"
-      ]
+      ],
+      "live_parse_expectation": {
+        "parser_key_id": "starseries_s20_barcelona_2026_v1",
+        "status": "parsed_with_warnings",
+        "matches": 68,
+        "blocking_errors": 0,
+        "warnings": 14,
+        "issue_codes": [
+          "time_pending"
+        ]
+      }
     },
     {
       "case_id": "united21_season_52",
@@ -71,7 +137,15 @@
       "compatibility": "exact",
       "acceptable_parser_key_ids": [
         "united21_season_52_v1"
-      ]
+      ],
+      "live_parse_expectation": {
+        "parser_key_id": "united21_season_52_v1",
+        "status": "parsed",
+        "matches": 34,
+        "blocking_errors": 0,
+        "warnings": 0,
+        "issue_codes": []
+      }
     },
     {
       "case_id": "european_pro_league_season_39",
@@ -80,7 +154,15 @@
       "compatibility": "exact",
       "acceptable_parser_key_ids": [
         "european_pro_league_season_39_v1"
-      ]
+      ],
+      "live_parse_expectation": {
+        "parser_key_id": "european_pro_league_season_39_v1",
+        "status": "parsed",
+        "matches": 30,
+        "blocking_errors": 0,
+        "warnings": 0,
+        "issue_codes": []
+      }
     },
     {
       "case_id": "esports_world_cup_2026_dota2",
@@ -89,7 +171,18 @@
       "compatibility": "exact",
       "acceptable_parser_key_ids": [
         "esports_world_cup_2026_dota2_v1"
-      ]
+      ],
+      "live_parse_expectation": {
+        "parser_key_id": "esports_world_cup_2026_dota2_v1",
+        "status": "parsed_with_warnings",
+        "matches": 89,
+        "blocking_errors": 0,
+        "warnings": 3,
+        "issue_codes": [
+          "formula_cached_value_missing",
+          "record_count_mismatch"
+        ]
+      }
     },
     {
       "case_id": "pari_universe_july_31_august_6",
@@ -104,6 +197,7 @@
         "status": "parsed",
         "matches": 29,
         "blocking_errors": 0,
+        "warnings": 0,
         "issue_codes": []
       }
     },
@@ -117,9 +211,10 @@
       ],
       "live_parse_expectation": {
         "parser_key_id": "lunar_horse_trophy_8_v1",
-        "status": "blocked",
+        "status": "parsed_with_warnings",
         "matches": 36,
-        "blocking_errors": 8,
+        "blocking_errors": 0,
+        "warnings": 8,
         "issue_codes": [
           "missing_time"
         ]
@@ -132,7 +227,17 @@
       "compatibility": "exact",
       "acceptable_parser_key_ids": [
         "betboom_rise_of_legends_10_v1"
-      ]
+      ],
+      "live_parse_expectation": {
+        "parser_key_id": "betboom_rise_of_legends_10_v1",
+        "status": "parsed_with_warnings",
+        "matches": 135,
+        "blocking_errors": 0,
+        "warnings": 2,
+        "issue_codes": [
+          "missing_time"
+        ]
+      }
     },
     {
       "case_id": "betboom_bitva_chempionov_split_4",
@@ -141,7 +246,17 @@
       "compatibility": "exact",
       "acceptable_parser_key_ids": [
         "betboom_bitva_chempionov_split_4_v1"
-      ]
+      ],
+      "live_parse_expectation": {
+        "parser_key_id": "betboom_bitva_chempionov_split_4_v1",
+        "status": "parsed_with_warnings",
+        "matches": 205,
+        "blocking_errors": 0,
+        "warnings": 60,
+        "issue_codes": [
+          "formula_cached_value_missing"
+        ]
+      }
     }
   ]
 }

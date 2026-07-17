@@ -126,6 +126,18 @@ def test_missing_optional_mappings_become_null() -> None:
     assert key.field_mappings["match_label"] is None
 
 
+def test_v0_empty_participant_policy_validates_supported_values() -> None:
+    data = nested_key_data()
+    data["validation_rules"] = {"empty_participant_policy": "use_tbd"}
+    assert normalize_parser_key(data).raw_data["validation_rules"][
+        "empty_participant_policy"
+    ] == "use_tbd"
+
+    data["validation_rules"]["empty_participant_policy"] = "guess"
+    with pytest.raises(ValueError, match="empty_participant_policy"):
+        normalize_parser_key(data)
+
+
 def test_v2_schema_validation_rejects_missing_contract_sections() -> None:
     data = json.loads(
         (ROOT / "parser_keys" / "betboom_rush_b_summit_part_four_v1.json").read_text(
