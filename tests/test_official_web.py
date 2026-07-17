@@ -66,6 +66,11 @@ def test_riot_adapters_paginate_normalize_states_and_keep_sport_independent() ->
         "live",
     ]
     assert result.matches[2].team_a == "TBD"
+    assert [match.stage for match in result.matches] == [
+        "VCT Test · Week 1",
+        "Game Changers · Week 1",
+        "VCT Test · Groups",
+    ]
     assert result.ingestion.strategy == "riot_graphql_persisted_query"
     assert result.ingestion.request_count == 2
     first_variables = json.loads(lol_client.calls[0][1]["variables"])
@@ -90,6 +95,10 @@ def test_call_of_duty_extracts_next_data_and_warns_for_missing_bo() -> None:
         "completed",
     }
     assert all(match.bo == "" for match in result.matches)
+    assert {match.stage for match in result.matches} == {
+        "Major IV · Finals",
+        "Championship · Playoffs",
+    }
     assert {issue.code for issue in result.issues} == {"bo_missing"}
 
 
@@ -106,6 +115,11 @@ def test_rainbow_six_uses_month_payload_and_marks_provisional_time() -> None:
     ]
     assert result.matches[0].team_a == "TBD"
     assert result.matches[0].official.time_is_tbd
+    assert [match.stage for match in result.matches] == [
+        "North America League",
+        "Europe League",
+        "Major",
+    ]
     assert [issue.code for issue in result.issues] == ["official_time_tbd"]
 
 
