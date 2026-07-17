@@ -10,6 +10,7 @@ from .errors import OfficialSchemaError
 from .models import OfficialHttpClientProtocol, OfficialScheduleRequest, OfficialSource
 from .next_data import parse_next_data
 from .normalization import (
+    compose_stage,
     finish_official_result,
     mapping,
     normalize_text,
@@ -162,7 +163,7 @@ class CallOfDutyLeagueAdapter:
             state = STATE_MAP.get(raw_state.upper(), "unknown")
             competition_name = normalize_text(group.get("title")) or "Call of Duty League"
             subtitle = normalize_text(group.get("subtitle"))
-            stage = " · ".join(value for value in (competition_name, subtitle) if value)
+            stage = compose_stage(competition_name, subtitle)
             date_text, time_text, utc_text = utc_fields(start)
             match = ParsedMatch(
                 source_row=0,

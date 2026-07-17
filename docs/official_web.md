@@ -19,7 +19,7 @@ The initial server-rendered page contains only the site's current home window an
 - Strategy: `riot_graphql_persisted_query`.
 - Endpoint: `https://valorantesports.com/api/gql`.
 - Uses its own registered adapter and `sport=val`, while sharing the defensive Riot transport and pagination implementation.
-- Official league IDs/names are preserved and exposed as Competition filters. No region is inferred when Riot does not supply one.
+- Official league IDs/names are preserved as Competition metadata. The normalized Stage joins the league name and Riot block name so simultaneous tournaments remain distinguishable. No region is inferred when Riot does not supply one.
 
 ### Call of Duty League
 
@@ -49,4 +49,5 @@ Competition pages are not used as fallback because the month payload reliably co
 - Date ranges are at most 90 inclusive days and are converted from the selected IANA timezone to a half-open UTC interval.
 - Required-page failures never return partial data. Valid empty responses return `parsed` with `legitimate_empty=true`.
 - Official IDs deduplicate first. Remaining equal `(start_time_utc, team_a, team_b)` tuples use NETO's existing duplicate warning.
+- Stage uses the available Competition plus source stage label. Competition remains available in the collapsed source-metadata filters and provenance table.
 - No response headers, credentials, cookies, tokens, or analytics payloads are stored in test fixtures.

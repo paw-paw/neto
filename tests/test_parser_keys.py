@@ -148,3 +148,15 @@ def test_v2_runtime_rejects_catalogued_but_unimplemented_operator() -> None:
 
     with pytest.raises(ValueError, match="does not implement"):
         normalize_parser_key(data)
+
+
+def test_repository_catalog_includes_starseries_draft_key() -> None:
+    catalog = load_parser_keys(ROOT / "parser_keys")
+    keys = {key.parser_key_id: key for key in catalog.keys}
+
+    assert not catalog.errors
+    starseries = keys["starseries_s20_barcelona_2026_v1"]
+    assert starseries.key_name == "StarSeries S20 Barcelona 2026 — Complete Schedule"
+    assert starseries.schema_version == "neto.parser_key.v2"
+    assert starseries.base_timezone == "Europe/Madrid"
+    assert starseries.raw_data["status"] == "draft"
