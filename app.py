@@ -4,15 +4,21 @@ from __future__ import annotations
 
 import base64
 import hashlib
-import html
 import re
 from datetime import date, timedelta
 from functools import lru_cache
 from pathlib import Path
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError, available_timezones
 
 import pandas as pd
 import streamlit as st
 
+from google_sheets import (
+    FetchedGoogleSheet,
+    GoogleSheetsError,
+    fetch_google_sheet,
+    parse_fetched_google_sheet,
+)
 from official_web import (
     OfficialScheduleRequest,
     fetch_official_schedule,
@@ -58,6 +64,23 @@ FONT_ASSETS = {
 PARSERKEY_CREATOR_URL = (
     "https://chatgpt.com/g/g-6a579fdaa2948191b59a59f34f8f688d-"
     "neto-parserkey-creator"
+)
+INGESTION_METHODS = (
+    (
+        "Google Sheets",
+        "ingestion_google_sheets",
+        "Load a public native Google Sheet and process its complete workbook with a ParserKey.",
+    ),
+    (
+        "Official Website",
+        "ingestion_official_website",
+        "Fetch published schedules directly from a supported official esports website.",
+    ),
+    (
+        "Tournament Page",
+        "ingestion_tournament_page",
+        "Extract all available matches from a supported Leaguepedia tournament page.",
+    ),
 )
 
 
@@ -162,9 +185,66 @@ def _cached_fetch_tournament(
     return result
 
 
+@st.cache_data(ttl=300, max_entries=32, show_spinner=False)
+def _cached_fetch_google_sheet(url: str) -> FetchedGoogleSheet:
+    return fetch_google_sheet(url)
+
+
 @st.cache_data(max_entries=16, show_spinner=False)
 def _cached_workbook_fingerprint(file_bytes: bytes, file_name: str):
     return fingerprint_workbook(file_bytes, file_name)
+
+
+def _render_ingestion_methods() -> str:
+    valid_modes = {label for label, _, _ in INGESTION_METHODS}
+    selected = st.session_state.get("ingestion_mode", "Google Sheets")
+    if selected not in valid_modes:
+        selected = "Google Sheets"
+        st.session_state["ingestion_mode"] = selected
+    st.markdown("**Ingestion method**")
+    columns = st.columns(len(INGESTION_METHODS), gap="small")
+    for column, (label, key, help_text) in zip(columns, INGESTION_METHODS):
+        with column:
+            clicked = st.button(
+                label,
+                key=key,
+                help=help_text,
+                type="primary" if selected == label else "secondary",
+                width="stretch",
+            )
+            if clicked and selected != label:
+                st.session_state["ingestion_mode"] = label
+                st.rerun()
+    return selected
+
+
+@lru_cache(maxsize=1)
+def _iana_timezones() -> tuple[str, ...]:
+    return tuple(sorted(available_timezones()))
+
+
+def _validated_browser_timezone(value: object) -> str:
+    if not isinstance(value, str) or not value.strip():
+        return "UTC"
+    candidate = value.strip()
+    try:
+        ZoneInfo(candidate)
+    except (ZoneInfoNotFoundError, ValueError):
+        return "UTC"
+    return candidate
+
+
+def _browser_timezone() -> str:
+    try:
+        value = st.context.timezone
+    except (AttributeError, RuntimeError):
+        value = None
+    return _validated_browser_timezone(value)
+
+
+def _timezone_options(preferred: str) -> tuple[str, ...]:
+    value = _validated_browser_timezone(preferred)
+    return (value, *tuple(zone for zone in _iana_timezones() if zone != value))
 
 
 def _session_parser_keys() -> list[ParserKey]:
@@ -289,23 +369,24 @@ def _render_suggestions(suggestions: list[ParserKeySuggestion]) -> None:
         st.info("No ParserKeys are available to rank.")
         return
     strongest = suggestions[0]
+    reason = " · ".join(strongest.reasons) or "No strong structural signals."
     if strongest.confidence == "Low":
         st.warning(
             "No confident ParserKey match was found. Review the best available candidates manually."
         )
+        st.markdown(
+            f"**Best available:** {strongest.parser_key.key_name} · "
+            f"{strongest.confidence} ({strongest.score}/100)"
+        )
+        st.caption(reason)
     else:
         st.success(
             f"Recommended · {strongest.parser_key.key_name} · "
-            f"{strongest.confidence} confidence"
+            f"{strongest.confidence} confidence · {reason}"
         )
-    for index, suggestion in enumerate(suggestions, start=1):
-        label = (
-            "Recommended"
-            if index == 1 and suggestion.confidence != "Low"
-            else ("Best available" if index == 1 else f"Candidate {index}")
-        )
+    for index, suggestion in enumerate(suggestions[1:], start=2):
         st.markdown(
-            f"**{label}:** {suggestion.parser_key.key_name} "
+            f"**Candidate {index}:** {suggestion.parser_key.key_name} "
             f"· {suggestion.confidence} ({suggestion.score}/100)"
         )
         st.caption(" · ".join(suggestion.reasons) or "No strong structural signals.")
@@ -419,7 +500,7 @@ def _render_status(result: ParseResult) -> None:
             f"`{ingestion.strategy}`"
         )
         st.caption(
-            f"Fetched {ingestion.fetched_at_utc} · {ingestion.request_count} API request(s)"
+            f"Fetched {ingestion.fetched_at_utc} · {ingestion.request_count} request(s)"
         )
         state_counts: dict[str, int] = {}
         for match in result.matches:
@@ -485,7 +566,7 @@ def _render_validation_issues(result: ParseResult | None) -> None:
 
 def _render_export(
     result: ParseResult | None,
-    uploaded_file: object | None,
+    input_file_name: str | None,
     selected_key: ParserKey | None,
     canonical: pd.DataFrame | None,
     presentation: pd.DataFrame | None,
@@ -501,13 +582,18 @@ def _render_export(
         ingestion = result.ingestion
         if ingestion.method == "wiki_tournament":
             base_args = (f"{ingestion.source_id}_tournament.xlsx", "wiki")
+        elif ingestion.method == "google_sheets":
+            base_args = (
+                input_file_name or f"{ingestion.source_id}.xlsx",
+                selected_key.parser_key_id if selected_key else "google_sheets",
+            )
         else:
             base_args = (
                 f"{ingestion.source_id}_{ingestion.range_start}_{ingestion.range_end}.xlsx",
                 "official",
             )
-    elif uploaded_file is not None and selected_key is not None:
-        base_args = (uploaded_file.name, selected_key.parser_key_id)
+    elif input_file_name is not None and selected_key is not None:
+        base_args = (input_file_name, selected_key.parser_key_id)
     else:
         base_args = ("output.xlsx", "matches")
     payloads = {
@@ -558,28 +644,6 @@ def _non_empty_options(dataframe: pd.DataFrame, column: str) -> list[str]:
     return sorted(value for value in values.unique().tolist() if value)
 
 
-def _table_context(
-    *,
-    visible: int,
-    total: int,
-    schedule_timezone: str,
-) -> None:
-    items = (
-        ("Visible matches", f"{visible} / {total}"),
-        ("Schedule timezone", schedule_timezone or "—"),
-    )
-    cards = "".join(
-        (
-            '<div class="neto-context-card">'
-            f'<span class="neto-context-label">{html.escape(label)}</span>'
-            f'<span class="neto-context-value" title="{html.escape(value)}">'
-            f"{html.escape(value)}</span></div>"
-        )
-        for label, value in items
-    )
-    st.markdown(f'<div class="neto-table-context">{cards}</div>', unsafe_allow_html=True)
-
-
 def _render_match_table(
     result: ParseResult | None,
     selected_key: ParserKey | None,
@@ -619,7 +683,7 @@ def _render_match_table(
             key="preview_search",
         )
 
-    filter_columns = st.columns(4 if has_source_metadata else 2, gap="small")
+    filter_columns = st.columns(4, gap="small")
     with filter_columns[0]:
         stages = st.multiselect(
             "Stage",
@@ -637,20 +701,22 @@ def _render_match_table(
     competitions: list[str] = []
     match_states: list[str] = []
     if has_source_metadata:
-        with filter_columns[2]:
-            competitions = st.multiselect(
-                "Competition",
-                options=_non_empty_options(all_rows, "_competition"),
-                placeholder="All competitions",
-                key="preview_competition",
-            )
-        with filter_columns[3]:
-            match_states = st.multiselect(
-                "Match state",
-                options=_non_empty_options(all_rows, "_match_state"),
-                placeholder="All states",
-                key="preview_match_state",
-            )
+        with st.expander("More filters"):
+            metadata_filters = st.columns(2, gap="small")
+            with metadata_filters[0]:
+                competitions = st.multiselect(
+                    "Competition",
+                    options=_non_empty_options(all_rows, "_competition"),
+                    placeholder="All competitions",
+                    key="preview_competition",
+                )
+            with metadata_filters[1]:
+                match_states = st.multiselect(
+                    "Match state",
+                    options=_non_empty_options(all_rows, "_match_state"),
+                    placeholder="All states",
+                    key="preview_match_state",
+                )
 
     canonical = canonical_view_dataframe(
         result,
@@ -662,11 +728,10 @@ def _render_match_table(
         match_states=match_states,
     )
     presentation = presentation_dataframe(canonical)
-    _table_context(
-        visible=len(canonical),
-        total=len(result.matches),
-        schedule_timezone=schedule_timezone,
-    )
+    with filter_columns[2]:
+        st.metric("Visible matches", f"{len(canonical)} / {len(result.matches)}")
+    with filter_columns[3]:
+        st.metric("Schedule timezone", schedule_timezone or "—")
 
     if canonical.empty:
         st.info("No matches satisfy the current filters.")
@@ -715,13 +780,7 @@ def main() -> None:
     _render_brand_header()
     _render_registration_notice()
 
-    ingestion_mode = st.segmented_control(
-        "Ingestion method",
-        options=["XLSX Upload", "Official Website", "Tournament Page"],
-        default="XLSX Upload",
-        key="ingestion_mode",
-        width="content",
-    )
+    ingestion_mode = _render_ingestion_methods()
 
     catalog = load_parser_keys(PARSER_KEYS_DIR)
     repository_ids = {key.parser_key_id for key in catalog.keys}
@@ -738,13 +797,16 @@ def main() -> None:
 
     uploaded_file = None
     file_bytes: bytes | None = None
+    input_file_name: str | None = None
+    google_sheet_url = ""
+    google_sheet_workbook: FetchedGoogleSheet | None = None
     selected_key_id: str | None = None
     selected_key: ParserKey | None = None
     selected_source_id: str | None = None
     selected_source = None
     official_start: date | None = None
     official_end: date | None = None
-    range_timezone = "America/Lima"
+    range_timezone = _browser_timezone()
     official_range_valid = False
     parser_key_confirmed = False
     tournament_url = ""
@@ -756,37 +818,84 @@ def main() -> None:
             [1.15, 1.15, 0.7], gap="medium", vertical_alignment="top", border=True
         )
 
-        if ingestion_mode == "XLSX Upload":
+        if ingestion_mode == "Google Sheets":
             with first_column:
-                st.subheader("1. Upload XLSX")
-                uploaded_file = st.file_uploader(
-                    "Upload an esports schedule",
-                    type=["xlsx"],
-                    accept_multiple_files=False,
-                    max_upload_size=25,
-                    key="schedule_upload",
+                st.subheader("1. Load Schedule")
+                google_sheet_url = st.text_input(
+                    "Public Google Sheets URL",
+                    placeholder="https://docs.google.com/spreadsheets/d/.../edit?gid=...",
+                    key="google_sheets_url",
+                ).strip()
+                if st.button(
+                    "Load Google Sheet",
+                    key="load_google_sheet",
+                    disabled=not google_sheet_url,
+                    width="stretch",
+                ):
+                    try:
+                        with st.spinner("Downloading the complete workbook..."):
+                            google_sheet_workbook = _cached_fetch_google_sheet(
+                                google_sheet_url
+                            )
+                    except GoogleSheetsError as exc:
+                        st.session_state.pop("neto_google_sheet_workbook", None)
+                        st.session_state.pop("neto_google_sheet_request_url", None)
+                        st.error(str(exc))
+                    else:
+                        st.session_state["neto_google_sheet_workbook"] = (
+                            google_sheet_workbook
+                        )
+                        st.session_state["neto_google_sheet_request_url"] = (
+                            google_sheet_url
+                        )
+
+                loaded_request_url = st.session_state.get(
+                    "neto_google_sheet_request_url"
                 )
-                file_bytes = (
-                    uploaded_file.getvalue() if uploaded_file is not None else None
-                )
-                if uploaded_file is None:
-                    st.caption("No file uploaded.")
+                loaded_workbook = st.session_state.get("neto_google_sheet_workbook")
+                if (
+                    loaded_request_url == google_sheet_url
+                    and isinstance(loaded_workbook, FetchedGoogleSheet)
+                ):
+                    google_sheet_workbook = loaded_workbook
+                    file_bytes = loaded_workbook.content
+                    input_file_name = loaded_workbook.file_name
+                    st.success(f"Loaded · {loaded_workbook.file_name}")
+                    st.caption("Complete workbook · cached for 5 minutes")
+                elif google_sheet_url:
+                    st.caption("Select Load Google Sheet to download this URL.")
                 else:
-                    st.success(f"Loaded · {uploaded_file.name}")
-                _render_parser_key_registration(available_keys)
+                    st.caption(
+                        'The sheet must be shared as "Anyone with the link — Viewer".'
+                    )
+
+                with st.expander("Upload XLSX (fallback)"):
+                    uploaded_file = st.file_uploader(
+                        "Upload an esports schedule",
+                        type=["xlsx"],
+                        accept_multiple_files=False,
+                        max_upload_size=25,
+                        key="schedule_upload",
+                    )
+                    if uploaded_file is None:
+                        st.caption("No fallback file uploaded.")
+                    else:
+                        file_bytes = uploaded_file.getvalue()
+                        input_file_name = uploaded_file.name
+                        google_sheet_workbook = None
+                        st.success(f"Using fallback · {uploaded_file.name}")
 
             with second_column:
                 st.subheader("2. Select ParserKey")
                 suggestions: list[ParserKeySuggestion] = []
-                if file_bytes is not None:
+                if file_bytes is not None and input_file_name is not None:
                     try:
                         fingerprint = _cached_workbook_fingerprint(
-                            file_bytes, uploaded_file.name
+                            file_bytes, input_file_name
                         )
                         suggestions = rank_parser_keys(
                             fingerprint, available_keys, limit=3
                         )
-                        _render_suggestions(suggestions)
                     except WorkbookFingerprintError as exc:
                         st.warning(str(exc))
 
@@ -822,6 +931,8 @@ def main() -> None:
                 selected_key = (
                     key_by_id.get(selected_key_id) if selected_key_id else None
                 )
+                if file_bytes is not None:
+                    _render_suggestions(suggestions)
                 if not key_by_id:
                     st.error("No valid ParserKeys are available in parser_keys/.")
                 if catalog.errors:
@@ -830,18 +941,20 @@ def main() -> None:
                     ):
                         for error in catalog.errors:
                             st.error(f"{error.file_name}: {error.message}")
-                if selected_key is not None:
-                    _render_key_summary(selected_key)
-                else:
+                if selected_key is None:
                     st.caption("Choose the configuration matching this workbook.")
+                else:
+                    with st.expander("ParserKey details"):
+                        _render_key_summary(selected_key)
                 if st.session_state.get("neto_confirmation_key") != selected_key_id:
                     st.session_state["neto_confirmation_key"] = selected_key_id
                     st.session_state["parser_key_confirm"] = False
                 parser_key_confirmed = st.checkbox(
-                    "I confirm this ParserKey for the uploaded workbook",
+                    "I confirm this ParserKey for the loaded workbook",
                     disabled=selected_key is None,
                     key="parser_key_confirm",
                 )
+                _render_parser_key_registration(available_keys)
         elif ingestion_mode == "Official Website":
             with first_column:
                 st.subheader("1. Official Source")
@@ -869,15 +982,11 @@ def main() -> None:
                 )
                 range_timezone = st.selectbox(
                     "Range timezone",
-                    options=[
-                        "America/Lima",
-                        "UTC",
-                        "Europe/Berlin",
-                        "Europe/Madrid",
-                        "Asia/Shanghai",
-                        "America/Sao_Paulo",
-                    ],
+                    options=_timezone_options(_browser_timezone()),
                     key="official_range_timezone",
+                    help=(
+                        "Defaults to your browser timezone. Type to search any IANA timezone."
+                    ),
                 )
                 if isinstance(selected_dates, (tuple, list)) and len(selected_dates) == 2:
                     official_start, official_end = selected_dates
@@ -973,7 +1082,7 @@ def main() -> None:
                 and parser_key_confirmed
             )
             readiness = (
-                (file_bytes is not None, "XLSX file"),
+                (file_bytes is not None, "Workbook loaded"),
                 (selected_key is not None, "ParserKey selected"),
                 (parser_key_confirmed, "ParserKey confirmed"),
             )
@@ -1014,9 +1123,17 @@ def main() -> None:
                         fetched_result = exc.result
                     st.session_state["neto_parse_result"] = fetched_result
                 else:
-                    st.session_state["neto_parse_result"] = parse_workbook(
-                        file_bytes or b"", selected_key
-                    )
+                    if google_sheet_workbook is not None:
+                        st.session_state["neto_parse_result"] = (
+                            parse_fetched_google_sheet(
+                                google_sheet_workbook,
+                                selected_key,
+                            )
+                        )
+                    else:
+                        st.session_state["neto_parse_result"] = parse_workbook(
+                            file_bytes or b"", selected_key
+                        )
 
     result: ParseResult | None = st.session_state.get("neto_parse_result")
 
@@ -1048,7 +1165,7 @@ def main() -> None:
             with st.container(border=True, key="export_card"):
                 _render_export(
                     result,
-                    uploaded_file,
+                    input_file_name,
                     selected_key,
                     canonical_view,
                     presentation_view,

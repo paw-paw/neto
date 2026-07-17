@@ -253,8 +253,7 @@ div[data-testid="stAlert"]:has([data-testid="stNotificationContentError"]) {
     margin: 16px 0;
 }
 
-.neto-metric-card,
-.neto-context-card {
+.neto-metric-card {
     min-width: 0;
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-cards);
@@ -290,38 +289,6 @@ div[data-testid="stAlert"]:has([data-testid="stNotificationContentError"]) {
     color: var(--color-mist);
     font-family: var(--neto-font-sans);
     font-size: 0.875rem;
-}
-
-.neto-table-context {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 8px;
-    margin: 4px 0 16px;
-}
-
-.neto-context-card {
-    padding: 10px 12px;
-}
-
-.neto-context-label,
-.neto-context-value {
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.neto-context-label {
-    color: rgba(202, 213, 226, 0.62);
-    font-family: var(--neto-font-sans);
-    font-size: 0.7rem;
-}
-
-.neto-context-value {
-    margin-top: 3px;
-    color: var(--color-ice-blue);
-    font-size: 0.84rem;
-    font-weight: 500;
 }
 
 button,
@@ -497,8 +464,7 @@ hr {
         min-width: 100% !important;
     }
 
-    .neto-metric-grid,
-    .neto-table-context {
+    .neto-metric-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
