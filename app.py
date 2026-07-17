@@ -29,6 +29,7 @@ from parser import (
     load_parser_keys,
     normalize_parser_key,
     parse_workbook,
+    parser_key_status,
     rank_parser_keys,
     validate_parser_key_upload,
 )
@@ -66,21 +67,9 @@ PARSERKEY_CREATOR_URL = (
     "neto-parserkey-creator"
 )
 INGESTION_METHODS = (
-    (
-        "Google Sheets",
-        "ingestion_google_sheets",
-        "Load a public native Google Sheet and process its complete workbook with a ParserKey.",
-    ),
-    (
-        "Official Website",
-        "ingestion_official_website",
-        "Fetch published schedules directly from a supported official esports website.",
-    ),
-    (
-        "Tournament Page",
-        "ingestion_tournament_page",
-        "Extract all available matches from a supported Leaguepedia tournament page.",
-    ),
+    "Google Sheets",
+    "Official Website",
+    "Tournament Page",
 )
 
 
@@ -196,26 +185,17 @@ def _cached_workbook_fingerprint(file_bytes: bytes, file_name: str):
 
 
 def _render_ingestion_methods() -> str:
-    valid_modes = {label for label, _, _ in INGESTION_METHODS}
+    valid_modes = set(INGESTION_METHODS)
     selected = st.session_state.get("ingestion_mode", "Google Sheets")
     if selected not in valid_modes:
         selected = "Google Sheets"
-        st.session_state["ingestion_mode"] = selected
-    st.markdown("**Ingestion method**")
-    columns = st.columns(len(INGESTION_METHODS), gap="small")
-    for column, (label, key, help_text) in zip(columns, INGESTION_METHODS):
-        with column:
-            clicked = st.button(
-                label,
-                key=key,
-                help=help_text,
-                type="primary" if selected == label else "secondary",
-                width="stretch",
-            )
-            if clicked and selected != label:
-                st.session_state["ingestion_mode"] = label
-                st.rerun()
-    return selected
+        st.session_state.pop("ingestion_mode", None)
+    st.tabs(
+        INGESTION_METHODS,
+        key="ingestion_mode",
+        on_change="rerun",
+    )
+    return st.session_state.get("ingestion_mode", selected)
 
 
 @lru_cache(maxsize=1)
@@ -357,7 +337,7 @@ def _issues_summary(result: ParseResult) -> pd.DataFrame:
 
 def _render_key_summary(parser_key: ParserKey) -> None:
     st.markdown(f"**{parser_key.key_name}**")
-    st.caption(f"Status · {parser_key.status.title()}")
+    st.caption(f"Status · {parser_key_status(parser_key).title()}")
     st.caption(f"Tournament · {parser_key.tournament_name}")
     st.caption(f"Timezone · {parser_key.base_timezone or '(missing)'}")
     st.caption(f"Sheet · {parser_key.target_sheet}")
@@ -373,7 +353,9 @@ def _render_suggestions(suggestions: list[ParserKeySuggestion]) -> None:
         return
     strongest = suggestions[0]
     reason = " · ".join(strongest.reasons) or "No strong structural signals."
-    status = " · Draft" if strongest.parser_key.status == "draft" else ""
+    status = (
+        " · Draft" if parser_key_status(strongest.parser_key) == "draft" else ""
+    )
     if strongest.confidence == "Low":
         st.warning(
             "Only a low structural match was found. Review it manually before confirming."
@@ -389,7 +371,9 @@ def _render_suggestions(suggestions: list[ParserKeySuggestion]) -> None:
             f"{strongest.confidence} structural match{status} · {reason}"
         )
     for index, suggestion in enumerate(suggestions[1:], start=2):
-        status = " · Draft" if suggestion.parser_key.status == "draft" else ""
+        status = (
+            " · Draft" if parser_key_status(suggestion.parser_key) == "draft" else ""
+        )
         st.markdown(
             f"**Candidate {index}:** {suggestion.parser_key.key_name} "
             f"· {suggestion.confidence} structural match ({suggestion.score}/100){status}"
@@ -672,7 +656,7 @@ def _render_match_table(
         if has_source_metadata
         else (selected_key.base_timezone if selected_key else "UTC")
     )
-    control_columns = st.columns([1.2, 1.8], gap="small")
+    control_columns = st.columns(4 if has_source_metadata else [1.2, 1.8], gap="small")
     with control_columns[0]:
         sort_order = st.segmented_control(
             "Sort by start time",
@@ -706,22 +690,20 @@ def _render_match_table(
     competitions: list[str] = []
     match_states: list[str] = []
     if has_source_metadata:
-        with st.expander("More filters"):
-            metadata_filters = st.columns(2, gap="small")
-            with metadata_filters[0]:
-                competitions = st.multiselect(
-                    "Competition",
-                    options=_non_empty_options(all_rows, "_competition"),
-                    placeholder="All competitions",
-                    key="preview_competition",
-                )
-            with metadata_filters[1]:
-                match_states = st.multiselect(
-                    "Match state",
-                    options=_non_empty_options(all_rows, "_match_state"),
-                    placeholder="All states",
-                    key="preview_match_state",
-                )
+        with control_columns[2]:
+            competitions = st.multiselect(
+                "Competition",
+                options=_non_empty_options(all_rows, "_competition"),
+                placeholder="All competitions",
+                key="preview_competition",
+            )
+        with control_columns[3]:
+            match_states = st.multiselect(
+                "Match state",
+                options=_non_empty_options(all_rows, "_match_state"),
+                placeholder="All states",
+                key="preview_match_state",
+            )
 
     canonical = canonical_view_dataframe(
         result,

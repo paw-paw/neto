@@ -15,7 +15,6 @@ from .models import (
     OfficialSource,
 )
 from .normalization import (
-    compose_stage,
     finish_official_result,
     mapping,
     normalize_text,
@@ -201,10 +200,7 @@ class RiotScheduleAdapter:
                 start_time_utc=utc_text,
                 team_a=names[0],
                 team_b=names[1],
-                stage=compose_stage(
-                    official.competition_name,
-                    event.get("blockName"),
-                ),
+                stage=normalize_text(event.get("blockName")),
                 bo=bo,
                 match_label=normalize_text(tournament.get("name")) or f"Match {match_id}",
                 official=official,
