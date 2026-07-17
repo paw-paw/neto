@@ -1,11 +1,11 @@
 # NETO v0
 
-NETO (Normalized Esports Tournament Output) is a small internal Streamlit tool for prematch traders. It converts XLSX schedules, official esports website schedules, and supported tournament wiki pages into a normalized, validated table with UTC start times and operator-friendly exports.
+NETO (Normalized Esports Tournament Output) is a small internal Streamlit tool for prematch traders. It converts public native Google Sheets, fallback XLSX uploads, official esports website schedules, and supported tournament wiki pages into a normalized, validated table with UTC start times and operator-friendly exports.
 
 ## Requirements
 
 - Python 3.11 or newer
-- An `.xlsx` schedule
+- A public native Google Sheet or an `.xlsx` schedule
 - At least one valid ParserKey JSON in `parser_keys/`
 
 Install and run:
@@ -15,7 +15,7 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Choose **XLSX Upload** to upload a workbook, review NETO's three structural ParserKey suggestions, explicitly confirm a key, and click **Run Parse**. Choose **Official Website** to select an official source, inclusive date range, and range timezone. Choose **Tournament Page** for a Leaguepedia / LoL Fandom event URL. Export is enabled only when the result status is `parsed` or `parsed_with_warnings`.
+Choose **Google Sheets** to load a public native spreadsheet, or open **Upload XLSX (fallback)** for a local workbook. Review NETO's existing structural ParserKey suggestions, explicitly confirm a key, and click **Run Parse**. Choose **Official Website** to select an official source, inclusive date range, and range timezone. Choose **Tournament Page** for a Leaguepedia / LoL Fandom event URL. Each ingestion method has a short hover explanation. Export is enabled only when the result status is `parsed` or `parsed_with_warnings`.
 
 The interface uses a compact multi-column dashboard on wide displays and automatically stacks the same workflow vertically on narrow or near-square viewports. Findings, validation issues, and export controls share a summary row; the match table always uses the full content width below it.
 
@@ -25,11 +25,18 @@ The match table prioritizes natural date/time values, teams, BO, and stage. Its 
 
 - Descending start-time sorting by default, with ascending sorting available.
 - Free-text search across teams, stage, and match label.
-- Stage and row-status filters.
+- Stage and row-status filters in the same row as visible matches and schedule timezone.
+- Collapsed source-metadata filters for Competition and Match state when available.
 
 The table header also shows visible/total matches and the ParserKey schedule timezone.
 
 CSV, Markdown, XLSX, and PDF exports reflect the current filtered and sorted view. CSV retains NETO's fixed canonical ten-column schema; the other formats use the human-readable table headers and displayed local date/time.
+
+## Google Sheets ingestion
+
+NETO accepts public native Google Sheets URLs in the form `https://docs.google.com/spreadsheets/d/<id>/...`. The document must be shared as **Anyone with the link — Viewer**. NETO constructs Google's XLSX export endpoint itself, downloads the complete workbook in memory, validates it against the same 25 MB and archive-safety policy as uploads, and then reuses the existing fingerprint, ParserKey confirmation, parser, validation, preview, and export flow.
+
+Only `docs.google.com/spreadsheets` URLs are accepted; arbitrary URLs, embedded credentials, private sheets, Google Drive file links, and non-native documents are rejected. The selected `gid` is retained in the canonical source URL, but the complete workbook is downloaded because ParserKeys may require multiple tabs. Successful downloads are cached for five minutes and failures are not cached. No Google credentials or API key are required. Detailed behavior and deployment notes are in `docs/google_sheets.md`.
 
 ## Official website ingestion
 
@@ -40,7 +47,9 @@ NETO currently supports four allowlisted official sources:
 - Call of Duty League — season data embedded in the official Next.js page state.
 - Rainbow Six Siege — complete month data embedded in the official calendar page state.
 
-Official ranges are inclusive in the selected IANA timezone and limited to 90 days. Successful results are cached in the Streamlit process for five minutes. Failed requests are not cached. Retrieval strategy, request count, official match states, IDs, competitions, regions, and source URLs remain available in Findings and the official metadata expander.
+Official ranges are inclusive in the selected IANA timezone and limited to 90 days. The browser's IANA timezone is the default, `UTC` is used when it is unavailable, and the searchable selector contains the complete timezone database. Successful results are cached in the Streamlit process for five minutes. Failed requests are not cached. Retrieval strategy, request count, official match states, IDs, competitions, regions, and source URLs remain available in Findings and the official metadata expander.
+
+Official Stage values include available Competition context so schedules containing several tournaments remain distinguishable. The original Competition value is still retained as source metadata.
 
 Blank official participants become `TBD`. When Rainbow Six explicitly marks a published timestamp as TBD, NETO retains the provisional timestamp, adds `official_time_tbd`, and keeps the row exportable. A valid response containing no matches is reported as a legitimate empty result rather than an extraction failure.
 
@@ -77,7 +86,7 @@ ParserKey v2 files are validated against `neto_parserkey_v2.schema.json`, the de
 
 Reference templates are stored in `examples/` so their placeholder values are not loaded as runtime keys. The v2 contract and operator semantics are documented under `docs/parserkey_v2/`.
 
-When an XLSX is uploaded, NETO ranks the top three keys using sheet-name compatibility, bounded header/content samples, sheet dimensions, and source filename metadata. It does not run every complete parser for ranking. The score is advisory, low confidence is stated explicitly, and parsing stays disabled until the user confirms the selected key.
+When a Google Sheet or XLSX fallback is loaded, NETO ranks the top three keys using sheet-name compatibility, bounded header/content samples, sheet dimensions, and source filename metadata. It does not run every complete parser for ranking. The score is advisory, low confidence is stated explicitly, and parsing stays disabled until the user confirms the selected key. This release does not change ranking, scoring, confidence, or ParserKey validation behavior.
 
 The XLSX workflow also links to the NETO ParserKey Creator Custom GPT and accepts uploaded ParserKey JSON. Uploads pass the same schema, operator capability, plugin policy, identifier, regex-size, and bounded-work validation as repository keys. Valid keys become available immediately in the current browser session and are never written to GitHub or the Community Cloud filesystem. See `docs/parserkey_registration.md`.
 
@@ -95,7 +104,7 @@ The XLSX workflow also links to the NETO ParserKey Creator Custom GPT and accept
 
 ## Tests
 
-The test suite includes generated workbooks, the original public CCT workbook, all eight v2 source workbooks, top-three suggestion regression, temporary ParserKey registration and resource-policy checks, sanitized official and Leaguepedia API fixtures, UTC conversion and validation cases, four-format export checks, and Streamlit smoke tests for all three ingestion modes. The v2 regression asserts all 363 expected records, source hashes, record counts, smoke checks, and absence of blocking errors.
+The test suite includes generated workbooks, the original public CCT workbook, all eight v2 source workbooks, Google Sheets URL/download security tests, top-three suggestion regression, temporary ParserKey registration and resource-policy checks, sanitized official and Leaguepedia API fixtures, UTC conversion and validation cases, four-format export checks, and Streamlit smoke tests for all three ingestion modes. The v2 regression asserts all 363 expected records, source hashes, record counts, smoke checks, and absence of blocking errors.
 
 ```bash
 pytest
@@ -128,6 +137,13 @@ $env:NETO_WIKI_LIVE_URL = "https://lol.fandom.com/wiki/<tournament>"
 pytest tests/test_wiki_live.py -q
 ```
 
+The six public Google Sheets transport checks are opt-in. They verify only that Google exports a safe XLSX; ParserKey parse outcomes are intentionally outside this check:
+
+```powershell
+$env:NETO_RUN_LIVE_TESTS = "1"
+pytest tests/test_google_sheets_live.py -q
+```
+
 ## Intentional v0 exclusions
 
-No database, Google Sheets, in-app key editor, JSON export, visual brackets, copy-table action, match editing, arbitrary website scraping, or production browser automation is included. The Custom GPT is an external authoring workflow; NETO itself does not generate ParserKeys with AI.
+No database, private Google authentication, arbitrary Google Drive files, in-app key editor, JSON export, visual brackets, copy-table action, match editing, arbitrary website scraping, or production browser automation is included. The Custom GPT is an external authoring workflow; NETO itself does not generate ParserKeys with AI.
