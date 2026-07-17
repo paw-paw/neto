@@ -11,6 +11,7 @@ from .errors import OfficialSchemaError
 from .models import OfficialHttpClientProtocol, OfficialScheduleRequest, OfficialSource
 from .next_data import parse_next_data
 from .normalization import (
+    compose_stage,
     finish_official_result,
     mapping,
     normalize_text,
@@ -123,7 +124,7 @@ class RainbowSixSiegeAdapter:
                 start_time_utc=utc_text,
                 team_a=normalize_text(team_a.get("name")) or "TBD",
                 team_b=normalize_text(team_b.get("name")) or "TBD",
-                stage=competition_name,
+                stage=compose_stage(competition_name),
                 bo=bo,
                 match_label=f"Match {match_id}",
                 official=OfficialMatchMetadata(
