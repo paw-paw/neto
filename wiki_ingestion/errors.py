@@ -9,10 +9,6 @@ class TournamentUrlError(WikiIngestionError):
     """The supplied URL is invalid or unsupported."""
 
 
-class WikiConfigurationError(WikiIngestionError):
-    """A provider is supported but required server configuration is missing."""
-
-
 class WikiApiError(WikiIngestionError):
     """A supported provider API request failed."""
 

@@ -14,7 +14,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import LongTable, Paragraph, SimpleDocTemplate, TableStyle
 
-from .models import OUTPUT_COLUMNS
+from .export import canonical_csv_bytes as _canonical_csv_bytes
 
 
 DISPLAY_LABELS: dict[str, str] = {
@@ -32,12 +32,9 @@ DISPLAY_LABELS: dict[str, str] = {
 
 
 def canonical_csv_bytes(canonical: pd.DataFrame) -> bytes:
-    """Serialize the filtered view with NETO's fixed canonical schema."""
+    """Compatibility wrapper for callers importing the UI export module."""
 
-    csv_text = canonical.loc[:, list(OUTPUT_COLUMNS)].to_csv(
-        index=False, lineterminator="\n"
-    )
-    return csv_text.encode("utf-8-sig")
+    return _canonical_csv_bytes(canonical)
 
 
 def _display_dataframe(presentation: pd.DataFrame) -> pd.DataFrame:

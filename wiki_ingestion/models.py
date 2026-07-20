@@ -1,12 +1,8 @@
-"""Provider protocols used by tournament-page adapters and deterministic tests."""
+"""HTTP protocol shared by tournament-page adapters."""
 
 from __future__ import annotations
 
 from typing import Any, Protocol
-
-from parser.models import ParseResult
-
-from .urls import TournamentPage
 
 
 class WikiHttpClientProtocol(Protocol):
@@ -19,7 +15,3 @@ class WikiHttpClientProtocol(Protocol):
         params: dict[str, str] | None = None,
         headers: dict[str, str] | None = None,
     ) -> Any: ...
-
-
-class TournamentProvider(Protocol):
-    def fetch(self, page: TournamentPage, client: WikiHttpClientProtocol) -> ParseResult: ...
