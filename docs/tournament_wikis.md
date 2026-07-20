@@ -33,5 +33,4 @@ Dates and times are normalized to UTC. Published `TBD` team values are retained 
 
 - Coverage depends on the tournament populating `MatchSchedule` with an exact `OverviewPage`. Pages using a different Cargo model report no schedule or unsupported structure.
 - Streams/results remain provenance-only and are not added to NETO's fixed ten-column CSV.
-- Normal tests use deterministic fixtures. `tests/test_wiki_live.py` is opt-in and is not part of the default suite.
 - Liquipedia support is intentionally deferred beyond this preliminary release; no Liquipedia API key, endpoint, or rate-limit configuration is present in the deployed application.

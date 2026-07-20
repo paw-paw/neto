@@ -436,7 +436,7 @@ def parse_workbook(file_bytes: bytes, parser_key: ParserKey) -> ParseResult:
             f"Could not read this XLSX file. Upload a valid .xlsx schedule file. ({exc})",
             notice=notice,
         )
-    except Exception as exc:  # Defensive UI boundary; unit tests exercise normal branches.
+    except Exception as exc:  # Defensive UI boundary after expected failures are handled.
         return ParseResult.failed(
             f"The parser could not complete because of a technical error: {type(exc).__name__}: {exc}",
             notice=notice,

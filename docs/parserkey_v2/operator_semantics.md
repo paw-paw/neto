@@ -1,6 +1,6 @@
-# NETO ParserKey v2 — Operator Semantics Required by the Initial Corpus
+# NETO ParserKey v2 operator semantics
 
-This document fixes the minimum runtime behavior needed to execute the eight ParserKeys in this package.
+This document defines the runtime behavior for distributed ParserKey v2 documents.
 
 ## Record locators
 
@@ -138,11 +138,11 @@ For every extracted field, internal results should retain:
   `team_order_sensitive`, and skips a comparison only when both participants match
   placeholders declared by `normalization.teams`.
 
-## Regression rule
+## Runtime acceptance
 
-A ParserKey passes its basic regression test only when:
+A ParserKey is accepted only when:
 
 1. it validates against `neto_parserkey_v2.schema.json`;
 2. every required operator exists in `neto_operator_catalog_v1.json`;
-3. record-count drift follows the key's declared severity;
-4. all manifest smoke checks match.
+3. every required operator is implemented by the deployed runtime;
+4. its resource bounds and plugin policy are satisfied.
