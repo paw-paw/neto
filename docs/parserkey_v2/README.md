@@ -33,8 +33,8 @@ the source XLSX files.
 ## Important decisions
 
 - The schedule's primary displayed timezone becomes `tournament.base_timezone`.
-- Formula-heavy XLSX files are read from cached values; NETO does not recalculate arbitrary formulas.
-- Known future schedule slots with missing participants become `TBD`.
+- Formula-heavy XLSX files use cached values or safe direct A1 references; NETO does not recalculate arbitrary formulas.
+- Known future schedule slots with missing participants become `TBD` only under an explicit field/key policy.
 - Every record set emits `neto.normalized_match.v1`.
 - Plugins remain available as a final escape hatch, but none of these eight keys require one.
 

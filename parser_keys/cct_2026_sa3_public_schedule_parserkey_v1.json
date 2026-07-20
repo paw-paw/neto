@@ -61,6 +61,7 @@
     "time_column_semantics": "local_time"
   },
   "validation_rules": {
+    "empty_participant_policy": "use_tbd",
     "blocking_fields": ["date", "time", "timezone", "team_a", "team_b"],
     "warning_fields": ["stage", "bo", "match_label"],
     "allow_explicit_placeholders": true,

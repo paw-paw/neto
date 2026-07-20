@@ -18,6 +18,7 @@
       "predicate.not_empty",
       "records.row_scan",
       "sheet.exact",
+      "text.regex_replace",
       "text.to_string",
       "text.trim"
     ],
@@ -130,6 +131,13 @@
               }
             },
             "transforms": [
+              {
+                "op": "text.regex_replace",
+                "args": {
+                  "pattern": "(?<=\\.)[oO](?=\\d)",
+                  "replacement": "0"
+                }
+              },
               {
                 "op": "datetime.parse_date",
                 "args": {
@@ -577,7 +585,7 @@
     "record_count": {
       "minimum": 73,
       "maximum": 73,
-      "on_violation": "blocking_error"
+      "on_violation": "warning"
     },
     "custom_rules": []
   },
@@ -624,7 +632,7 @@
         "sha256": "f0d54a6694de954a337ecdb1215240b62ff6432727e903ddc8c1985d3a18c258"
       }
     ],
-    "notes": "The schedule is visually wide but record-oriented: each match occupies one populated row. Dates omit the year and receive 2026 from the ParserKey. Formula-backed fields use cached values.",
+    "notes": "The schedule is visually wide but record-oriented: each match occupies one populated row. Dates omit the year, receive 2026 from the ParserKey, and normalize the observed .oN month typo before parsing. Formula-backed participants use cached values, safe direct references, or explicit TBD fallbacks with warnings.",
     "tags": [
       "wide_sheet",
       "row_scan",

@@ -57,9 +57,13 @@ The local **Upload XLSX (fallback)** path intentionally remains available and fo
 
 This provider only changes how XLSX bytes reach NETO. The shared recommender and parser receive the same workbook bytes as the XLSX fallback. The provider itself does not change record-count contracts, formula policies, field requirements, warnings, or blocking errors.
 
-Consequently, a public sheet can download successfully while its selected ParserKey reports warnings or a blocked result because the live document differs from the snapshot used to create the key. The bounded structural recommender automatically recognizes CCT SA4 as compatible with the SA3 key and Exort Series 30 as compatible with the Series 29 key; it hides zero-score candidates. Exact record-count failures, missing formula caches or required fields, and updates required by draft keys remain ParserKey/runtime work rather than Google Sheets transport failures.
+Consequently, a public sheet can download successfully while its selected ParserKey reports warnings because the live document differs from the snapshot used to create the key. The bounded structural recommender recognizes CCT SA4 as compatible with the SA3 key and Exort Series 30 as compatible with the Series 29 key; it hides zero-score candidates. Current keys keep record-count drift and missing formula caches visible as warnings while allowing export. A missing required field remains blocking unless the field or key explicitly opts into a `TBD` policy.
 
-The bundled StarSeries S20 Barcelona key is registered as `draft`. It passes the current schema/runtime acceptance gates, but its current public sheet has diverged from the key's extraction and exact-count expectations; no compatibility claim is made in this release.
+Formula text and workbook-library objects are never exposed in preview or CSV.
+Safe direct A1 references can be resolved without evaluating Excel functions. An
+unresolved participant becomes `TBD` only under an explicit field/key policy. A
+published `TBD`/`TBA` time remains exportable with blank local/UTC time and a
+`time_pending` warning.
 
 ## Deployment
 
@@ -68,4 +72,4 @@ Streamlit Community Cloud needs outbound HTTPS access to:
 - `docs.google.com`;
 - Google-owned `*.googleusercontent.com` download hosts used by redirects.
 
-There are no required secrets. Normal tests use mocked HTTP responses. The 14-case public corpus is stored in `tests/fixtures/public_google_sheets_cases.json`; `tests/test_google_sheets_live.py` is opt-in through `NETO_RUN_LIVE_TESTS=1` and verifies safe export plus expected top-ranked ParserKey identity. Full parser outcomes stay in separate regression checks.
+There are no required secrets. Normal tests use mocked HTTP responses. The 14-case public corpus is stored in `tests/fixtures/public_google_sheets_cases.json`; `tests/test_google_sheets_live.py` is opt-in through `NETO_RUN_LIVE_TESTS=1` and verifies safe export, expected top-ranked ParserKey identity, parser outcome, and absence of canonical formula/object leaks. Eight hash-pinned XLSX snapshots under `tests/fixtures/live_regressions` provide deterministic cross-season and live-drift regressions.

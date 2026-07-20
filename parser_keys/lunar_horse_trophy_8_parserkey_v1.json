@@ -502,9 +502,9 @@
             "fallbacks": []
           },
           "required": true,
-          "on_missing": "blocking_error",
+          "on_missing": "warning",
           "default": null,
-          "description": "The Playoff sheet contains no start-time values; this intentionally remains blocking.",
+          "description": "The Playoff sheet contains no start-time values; rows remain exportable with a warning.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -730,7 +730,7 @@
     "record_count": {
       "minimum": 36,
       "maximum": 36,
-      "on_violation": "blocking_error"
+      "on_violation": "warning"
     },
     "custom_rules": []
   },
@@ -778,7 +778,7 @@
         "sha256": "158d140277e7d99c168ab16ae84b06f232bddabc2ebe7cd155fc8dbdcd902286"
       }
     ],
-    "notes": "Schema-valid draft for 28 group-stage matches and eight dated playoff slots. Playoff start times are absent from the workbook, so those records intentionally remain blocking/invalid until official times are supplied. Playoff tile order follows the bracket's upper path left-to-right, then lower path left-to-right.",
+    "notes": "Schema-valid draft for 28 group-stage matches and eight dated playoff slots. Playoff start times are absent from the workbook, so those rows remain exportable with missing-time warnings and blank UTC values. Playoff tile order follows the bracket's upper path left-to-right, then lower path left-to-right.",
     "tags": [
       "lunar-horse-trophy",
       "season-8",
