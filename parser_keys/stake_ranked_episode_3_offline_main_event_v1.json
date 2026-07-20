@@ -1987,12 +1987,11 @@
   },
   "metadata": {
     "created_at": "2026-07-12T00:57:12Z",
-    "created_by": "NETO corpus design",
+    "created_by": "NETO maintainers",
     "updated_at": null,
     "source_files": [
       {
-        "filename": "[Players doc] Stake Ranked Ep.3(1).xlsx",
-        "sha256": "75fd29ec296d275f147cc48b58bf7d361ca52628b9a37e87e2a44e81a11920a4"
+        "filename": "[Players doc] Stake Ranked Ep.3(1).xlsx"
       }
     ],
     "notes": "The schedule is embedded beside the bracket and divided into four non-contiguous day blocks. Dates come from section headers and match label/teams are extracted from a compound text cell.",

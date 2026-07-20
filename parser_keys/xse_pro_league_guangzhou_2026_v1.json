@@ -995,12 +995,11 @@
   },
   "metadata": {
     "created_at": "2026-07-12T00:57:12Z",
-    "created_by": "NETO corpus design",
+    "created_by": "NETO maintainers",
     "updated_at": null,
     "source_files": [
       {
-        "filename": "XSE PRO LEAGUE_GuangZhou_2026 - Tournament Overview 「PUBLIC」.xlsx",
-        "sha256": "a4dfd1993d134b7952cb0e07592f866908a70d95ebd2624960aa87475fdfa2f3"
+        "filename": "XSE PRO LEAGUE_GuangZhou_2026 - Tournament Overview 「PUBLIC」.xlsx"
       }
     ],
     "notes": "Two schedule sheets share the same shape. Dates are merged over each tournament day. The primary time source is CST/Asia-Shanghai; the CEST column is retained only as auxiliary data.",

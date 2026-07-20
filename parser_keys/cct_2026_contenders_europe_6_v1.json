@@ -513,12 +513,11 @@
   },
   "metadata": {
     "created_at": "2026-07-12T00:57:12Z",
-    "created_by": "NETO corpus design",
+    "created_by": "NETO maintainers",
     "updated_at": null,
     "source_files": [
       {
-        "filename": "[CCT 2026 Contenders EU6] Bracket, Schedule, Results — 🟩 PUBLIC.xlsx",
-        "sha256": "b0cfb245599fa2a285dd26ff37788208ae042c3a72dceae2043cff8ff2d1e37a"
+        "filename": "[CCT 2026 Contenders EU6] Bracket, Schedule, Results — 🟩 PUBLIC.xlsx"
       }
     ],
     "notes": "Dates are vertically merged. The key resolves each row to the merged-range origin. Times contain the CEST suffix; the IANA timezone remains Europe/Berlin.",

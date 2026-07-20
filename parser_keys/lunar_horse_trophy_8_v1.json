@@ -774,8 +774,7 @@
     "updated_at": null,
     "source_files": [
       {
-        "filename": "Lunar Horse Trophy 8.xlsx",
-        "sha256": "158d140277e7d99c168ab16ae84b06f232bddabc2ebe7cd155fc8dbdcd902286"
+        "filename": "Lunar Horse Trophy 8.xlsx"
       }
     ],
     "notes": "Schema-valid draft for 28 group-stage matches and eight dated playoff slots. Playoff start times are absent from the workbook, so those rows remain exportable with missing-time warnings and blank UTC values. Playoff tile order follows the bracket's upper path left-to-right, then lower path left-to-right.",

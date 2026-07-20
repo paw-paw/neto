@@ -1532,8 +1532,7 @@
     "updated_at": null,
     "source_files": [
       {
-        "filename": "Schedule _ PARI Universe _ July 31 - August 6.xlsx",
-        "sha256": "b256a27c10f62dadcb34cf4e35153a93bbcf03c8e091f1d9b22f687be1e4c4c7"
+        "filename": "Schedule _ PARI Universe _ July 31 - August 6.xlsx"
       }
     ],
     "notes": "Schema-valid draft for the visible 20-match group stage, seven pre-final playoff matches, one show match, and one playoff final. The year 2026 is inferred from workbook core metadata. Europe/Berlin is a provisional IANA mapping for the workbook's CEST labels; confirm the intended geographic IANA zone before approval. Blank participant cells use explicit TBD fallbacks only where the workbook defines a dated match slot.",

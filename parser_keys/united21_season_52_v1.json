@@ -3144,8 +3144,7 @@
     "updated_at": null,
     "source_files": [
       {
-        "filename": "United21 season 52.xlsx",
-        "sha256": "a1ee619cc61a4466cb3f85357202b2595d25c7877856ba5df53031a6d701cb43"
+        "filename": "United21 season 52.xlsx"
       }
     ],
     "notes": "Draft for the effective NETO v2 runtime. Uses cached values from the formula-backed Group Stage and Play-Off sheets. The workbook labels July times as CET; Europe/Berlin is a proposed civil-time mapping and requires owner confirmation because fixed CET (UTC+1) would shift every UTC result by one hour. Playoff record sets are declared in event chronology because the source is a spatial bracket.",

@@ -580,12 +580,11 @@
   },
   "metadata": {
     "created_at": "2026-07-12T00:57:12Z",
-    "created_by": "NETO corpus design",
+    "created_by": "NETO maintainers",
     "updated_at": null,
     "source_files": [
       {
-        "filename": "BetBoom RUSH B! Summit Part Four - BEST 2026 Event #4.xlsx",
-        "sha256": "a0fecaabbce290bc379098c3bfb77f679aa47c9f86d9f71e674ae0f56f69b76d"
+        "filename": "BetBoom RUSH B! Summit Part Four - BEST 2026 Event #4.xlsx"
       }
     ],
     "notes": "Rows 2–16 form a direct schedule table. Team cells are currently empty and are emitted as TBD. Grand Final is overridden from BO3 to BO5.",
