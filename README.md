@@ -1,149 +1,70 @@
 # NETO v0
 
-NETO (Normalized Esports Tournament Output) is a small internal Streamlit tool for prematch traders. It converts public native Google Sheets, fallback XLSX uploads, official esports website schedules, and supported tournament wiki pages into a normalized, validated table with UTC start times and operator-friendly exports.
+NETO (Normalized Esports Tournament Output) is a Streamlit application for turning esports schedules into a consistent, reviewable match table. It is an internal operational tool in active preliminary release: the ingestion contracts are stable, while source adapters and ParserKeys remain intentionally allowlisted.
 
-## Requirements
+This repository is public exclusively so it can be deployed on Streamlit Community Cloud. It is a runtime distribution, not a public dataset or validation package. Source workbooks, validation URLs, manifests, logs, and private validation materials are not included.
 
-- Python 3.11 or newer
-- A public native Google Sheet or an `.xlsx` schedule
-- At least one valid ParserKey JSON in `parser_keys/`
+## Quick start
 
-Install and run:
+Use Python 3.12, create an isolated environment, and run:
 
 ```bash
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Choose the **Google Sheets**, **Official Website**, or **Tournament Page** tab. Google Sheets can load a public native spreadsheet or open **Upload XLSX (fallback)** for a local workbook; review NETO's structural ParserKey suggestions, explicitly confirm a key, and click **Run Parse**. Official Website accepts a source, inclusive date range, and range timezone. Tournament Page accepts a Leaguepedia / LoL Fandom event URL. Export is enabled only when the result status is `parsed` or `parsed_with_warnings`.
+The current runtime needs no database, API key, cookie, browser service, or Streamlit secret. It does require outbound HTTPS access for network-backed sources.
 
-The interface uses a compact multi-column dashboard on wide displays and automatically stacks the same workflow vertically on narrow or near-square viewports. Findings, validation issues, and export controls share a summary row; the match table always uses the full content width below it.
+## Supported sources
 
-NETO ships its Deep Ocean Terminal visual identity with the application. The mascot, JetBrains Mono, DM Sans, design tokens, and font licenses are stored under `assets/` and embedded locally at runtime, so the interface does not depend on Google Fonts or another visual CDN. Streamlit's base dark theme lives in `.streamlit/config.toml`; the wider dashboard layout remains intentional even though the source design reference describes a narrow editorial page.
+- **Google Sheets:** accepts a native Google Sheet shared as “Anyone with the link — Viewer.” NETO validates the URL, downloads an XLSX export in memory, applies archive-safety limits, and never persists the workbook.
+- **XLSX upload:** provides a local fallback with the same security, fingerprinting, parsing, validation, and export path.
+- **Official Website:** retrieves allowlisted public schedules from League of Legends Esports, VALORANT Esports, Call of Duty League, and Rainbow Six Siege.
+- **Tournament Page:** retrieves Leaguepedia / LoL Fandom schedules through the public MediaWiki Cargo API. Liquipedia and arbitrary web scraping are not supported.
 
-The match table prioritizes natural date/time values, teams, BO, and stage. Its toolbar supports:
+Google Sheets and XLSX sources require a compatible ParserKey selected and confirmed by the operator. Official Website and Tournament Page adapters emit NETO records directly and do not use ParserKeys.
 
-- Descending start-time sorting by default, with ascending sorting available.
-- Free-text search across teams, stage, and match label.
-- Stage and row-status filters in the same row as visible matches and schedule timezone.
-- Competition and Match state filters in the same toolbar row when source metadata is available.
+## Canonical output
 
-The table header also shows visible/total matches and the ParserKey schedule timezone.
-
-CSV, Markdown, XLSX, and PDF exports reflect the current filtered and sorted view. CSV retains NETO's fixed canonical ten-column schema; the other formats use the human-readable table headers and displayed local date/time.
-
-## Google Sheets ingestion
-
-NETO accepts public native Google Sheets URLs in the form `https://docs.google.com/spreadsheets/d/<id>/...`. The document must be shared as **Anyone with the link — Viewer**. NETO constructs Google's XLSX export endpoint itself, downloads the complete workbook in memory, validates it against the same 25 MB and archive-safety policy as uploads, and then reuses the existing fingerprint, ParserKey confirmation, parser, validation, preview, and export flow.
-
-Only `docs.google.com/spreadsheets` URLs are accepted; arbitrary URLs, embedded credentials, private sheets, Google Drive file links, and non-native documents are rejected. The selected `gid` is retained in the canonical source URL, but the complete workbook is downloaded because ParserKeys may require multiple tabs. Successful downloads are cached for five minutes and failures are not cached. No Google credentials or API key are required. Detailed behavior and deployment notes are in `docs/google_sheets.md`.
-
-## Official website ingestion
-
-NETO currently supports four allowlisted official sources:
-
-- League of Legends Esports — official Riot GraphQL persisted query.
-- VALORANT Esports — an independent adapter using the corresponding Riot sport contract.
-- Call of Duty League — season data embedded in the official Next.js page state.
-- Rainbow Six Siege — complete month data embedded in the official calendar page state.
-
-Official ranges are inclusive in the selected IANA timezone and limited to 90 days. The browser's IANA timezone is the default, `UTC` is used when it is unavailable, and the searchable selector contains the complete timezone database. Successful results are cached in the Streamlit process for five minutes. Failed requests are not cached. Retrieval strategy, request count, official match states, IDs, competitions, regions, and source URLs remain available in Findings and the official metadata expander.
-
-Official Stage values include available Competition context so schedules containing several tournaments remain distinguishable. The original Competition value is still retained as source metadata.
-
-Blank official participants become `TBD`. When Rainbow Six explicitly marks a published timestamp as TBD, NETO retains the provisional timestamp, adds `official_time_tbd`, and keeps the row exportable. A valid response containing no matches is reported as a legitimate empty result rather than an extraction failure.
-
-The canonical CSV remains the same ten-column NETO contract. Official metadata is intentionally UI/internal only so existing downstream consumers remain compatible. Deployment requires outbound HTTPS access to `lolesports.com`, `valorantesports.com`, `callofdutyleague.com`, and `www.ubisoft.com`; no browser runtime, credentials, cookies, or private tokens are required.
-
-Detailed source contracts and maintenance risks are documented in `docs/official_web.md`.
-
-## Tournament wiki ingestion
-
-The preliminary release supports Leaguepedia / LoL Fandom tournament URLs (`lol.fandom.com/wiki/...`) through the public MediaWiki Cargo `MatchSchedule` table. Successful responses are cached for one hour, all published matches are requested, and source URLs and attribution remain visible in Findings and source metadata. Liquipedia ingestion is intentionally disabled for this release.
-
-Complete, partial-with-warnings, no-schedule, unsupported-structure, API-failure, and invalid-URL outcomes are reported separately. Records without a reliable date, time, Team A, and Team B are skipped with visible warnings; a page where no candidate record has all four required values fails as unsupported structure.
-
-Provider contracts, supported URL patterns, configuration, attribution, and limitations are documented in `docs/tournament_wikis.md`.
-
-## ParserKeys
-
-Runtime keys are discovered from `parser_keys/*.json`. NETO supports:
-
-- `neto.parser_key.v0`: the original linear-table format and its equivalent flat shape.
-- `neto.parser_key.v2`: schema-validated operator pipelines used by the bundled eight-workbook universal corpus.
-
-The v0 semantic fields are:
+Export is enabled only for `parsed` and `parsed_with_warnings` results. The canonical CSV contract remains fixed at ten columns:
 
 ```text
-parser_key_id, key_name, tournament_name, base_timezone,
-target_sheet, layout_type, header_row, data_start_row,
-field_mappings, forward_fill_rules
+date_original, time_original, timezone, start_time_utc,
+team_a, team_b, stage, bo, match_label, row_status
 ```
 
-Only `layout_type = linear_table` is supported. Column mappings use Excel letters. `date`, `time`, `team_a`, and `team_b` mappings are mandatory, and team fields can never be forward-filled. Invalid keys are reported in the UI and excluded from selection.
+The interface also exports the current filtered view as Markdown, XLSX, and PDF. Formula text, workbook-library objects, internal provenance, and adapter-only metadata never enter the canonical CSV. ParserKeys may preserve source filenames for recommendations and provenance; distributed keys omit optional source hashes.
 
-ParserKey v2 files are validated against `neto_parserkey_v2.schema.json`, the declared operator catalog, and the operators implemented by the runtime before they appear in the UI. The initial runtime supports row scans/ranges, horizontal tile grids, merged and relative cells, contexts, regex extractors, predicates, fallbacks/defaults, overrides, formula-cache policies, and deterministic date/time transforms. Plugins remain unsupported.
+## Repository structure
 
-Reference templates are stored in `examples/` so their placeholder values are not loaded as runtime keys. The v2 contract and operator semantics are documented under `docs/parserkey_v2/`.
-
-When a Google Sheet or XLSX fallback is loaded, NETO ranks up to three positive structural matches using required/distinctive sheet names, a hard-bounded 32-by-40 sample, cheap ParserKey-derived cell/anchor probes, known per-sheet bounds, and Unicode-aware tournament-family metadata. Edition numbers are separate from family identity, so an edition X key can be recommended for a structurally compatible edition X+1. The matcher does not run complete parsers. Scores use runner-up margin and independent evidence; zero-score candidates are hidden and weak no-match cases return no recommendation. Parsing stays disabled until the user confirms the selected key.
-
-The XLSX workflow also links to the NETO ParserKey Creator Custom GPT and accepts uploaded ParserKey JSON. Uploads pass the same schema, operator capability, plugin policy, identifier, regex-size, and bounded-work validation as repository keys. Valid keys become available immediately in the current browser session and are never written to GitHub or the Community Cloud filesystem. See `docs/parserkey_registration.md`.
-
-## Parsing behavior
-
-- Target sheet matching is exact and case-sensitive.
-- Reading starts at `data_start_row` and stops after five consecutive rows where all mapped fields are empty after whitespace normalization.
-- Strings are trimmed, line breaks become spaces, internal whitespace is collapsed, and casing is preserved.
-- Forward-fill is applied only to enabled fields and never to `team_a` or `team_b`.
-- Native Excel date/time values are supported, along with documented ISO/day-first date strings and 12/24-hour time strings.
-- The timezone always comes from the ParserKey and is converted with Python `zoneinfo`.
-- ParserKey `output` configuration is informational in v0. The canonical CSV always uses NETO's fixed ten-column output, including `row_status`.
-- Formula cells use cached scalar values or resolve only safe direct A1 references. Missing caches remain visible diagnostics; formula text and OpenPyXL objects never reach preview/CSV, and `TBD` is used only under an explicit field/key policy.
-- V2 matches retain source sheet, record set, tile, source cell, transform chain, fallback/default use, and override reason internally; these fields are excluded from CSV.
-
-## Tests
-
-The test suite includes generated workbooks, the original public CCT workbook, all eight v2 source workbooks, Google Sheets URL/download security tests, top-three suggestion regression, temporary ParserKey registration and resource-policy checks, sanitized official and Leaguepedia API fixtures, UTC conversion and validation cases, four-format export checks, and Streamlit smoke tests for all three ingestion modes. The v2 regression asserts all 363 expected records, source hashes, record counts, smoke checks, and absence of blocking errors.
-
-```bash
-pytest
+```text
+app.py                 Streamlit entrypoint
+parser/                ParserKey runtime, validation, presentation, exports
+google_sheets/         Google Sheets download adapter
+official_web/          Allowlisted official-site adapters
+wiki_ingestion/        Tournament-page adapters
+parser_keys/           Runtime ParserKeys
+assets/                Runtime CSS, logo, fonts, and font licenses
+docs/                  Deployment and technical contracts
+examples/              ParserKey authoring templates
 ```
 
-Run only the universal corpus regression with:
+Only runtime dependencies belong in `requirements.txt`; validation code, source material, and development-only dependencies are maintained separately from this distribution.
 
-```bash
-pytest tests/test_v2_corpus.py -q
-```
+## Deployment
 
-Live official-source smoke tests are opt-in and may return a legitimate empty range:
+Connect this repository to Streamlit Community Cloud, select `main`, set the entrypoint to `app.py`, and choose Python 3.12. No secrets are required for the current runtime. Detailed host requirements, safety boundaries, and release steps are in [docs/deployment.md](docs/deployment.md).
 
-```bash
-NETO_RUN_LIVE_TESTS=1 pytest tests/test_official_live.py -q
-```
+## Technical documentation
 
-On PowerShell:
+- [Google Sheets ingestion](docs/google_sheets.md)
+- [Official website adapters](docs/official_web.md)
+- [Tournament-page ingestion](docs/tournament_wikis.md)
+- [ParserKey suggestion and registration](docs/parserkey_registration.md)
+- [ParserKey v2 contract](docs/parserkey_v2/README.md)
 
-```powershell
-$env:NETO_RUN_LIVE_TESTS = "1"
-pytest tests/test_official_live.py -q
-```
+## Copyright and security
 
-Wiki live checks are also opt-in and require an explicit page URL:
+Do not commit private URLs, downloaded schedules, credentials, or validation material. Report security concerns privately to the repository owner rather than opening an issue containing sensitive data.
 
-```powershell
-$env:NETO_RUN_LIVE_TESTS = "1"
-$env:NETO_WIKI_LIVE_URL = "https://lol.fandom.com/wiki/<tournament>"
-pytest tests/test_wiki_live.py -q
-```
-
-The 14 public Google Sheets checks are opt-in. Their URLs and compatibility expectations live in `tests/fixtures/public_google_sheets_cases.json`. The live test verifies safe XLSX export and top-ranked ParserKey identity; full parse outcomes remain intentionally separate:
-
-```powershell
-$env:NETO_RUN_LIVE_TESTS = "1"
-pytest tests/test_google_sheets_live.py -q
-```
-
-## Intentional v0 exclusions
-
-No database, private Google authentication, arbitrary Google Drive files, in-app key editor, JSON export, visual brackets, copy-table action, match editing, arbitrary website scraping, or production browser automation is included. The Custom GPT is an external authoring workflow; NETO itself does not generate ParserKeys with AI.
+The NETO code, ParserKeys, schema, branding, and documentation are distributed under **all rights reserved** terms; public visibility does not grant an open-source license. See [COPYRIGHT.md](COPYRIGHT.md) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

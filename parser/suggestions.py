@@ -294,12 +294,6 @@ def _sheet_expectations(parser_key: ParserKey) -> list[_SheetExpectation]:
     return list(deduplicated.values())
 
 
-def _expected_sheets(parser_key: ParserKey) -> list[str]:
-    """Compatibility helper retained for callers and diagnostics."""
-
-    return [expectation.name for expectation in _sheet_expectations(parser_key)]
-
-
 def _source_file_names(parser_key: ParserKey) -> list[str]:
     metadata = parser_key.raw_data.get("metadata", {})
     names: list[str] = []

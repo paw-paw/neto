@@ -31,10 +31,16 @@ def issues_dataframe(result: ParseResult) -> pd.DataFrame:
     )
 
 
-def result_to_csv_bytes(result: ParseResult) -> bytes:
-    if not result.exportable:
-        raise ValueError(f'Parse status "{result.status}" is not exportable.')
-    csv_text = matches_dataframe(result.matches).to_csv(
+def canonical_csv_bytes(canonical: pd.DataFrame) -> bytes:
+    """Serialize a canonical dataframe with NETO's fixed public schema."""
+
+    csv_text = canonical.loc[:, list(OUTPUT_COLUMNS)].to_csv(
         index=False, lineterminator="\n"
     )
     return csv_text.encode("utf-8-sig")
+
+
+def result_to_csv_bytes(result: ParseResult) -> bytes:
+    if not result.exportable:
+        raise ValueError(f'Parse status "{result.status}" is not exportable.')
+    return canonical_csv_bytes(matches_dataframe(result.matches))

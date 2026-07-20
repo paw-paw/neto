@@ -1,6 +1,13 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.env
+.env.*
+!.env.example
 .streamlit/*
 !.streamlit/config.toml
 .venv/
@@ -10,3 +17,11 @@ python-*-amd64.exe
 dist/
 build/
 /to-cloud/
+tests/
+*.xlsx
+private-validation/
+.private-validation/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

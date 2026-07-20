@@ -1,4 +1,4 @@
-"""Operator runtime for the initial NETO ParserKey v2 corpus."""
+"""Operator runtime for NETO ParserKey v2 documents."""
 
 from __future__ import annotations
 

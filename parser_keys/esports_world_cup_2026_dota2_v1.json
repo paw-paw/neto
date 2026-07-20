@@ -1482,12 +1482,11 @@
   },
   "metadata": {
     "created_at": "2026-07-12T00:57:12Z",
-    "created_by": "NETO corpus design",
+    "created_by": "NETO maintainers",
     "updated_at": null,
     "source_files": [
       {
-        "filename": "[PUBLIC] Dota2 _ Tournament Overview _ Esports World Cup 2026.xlsx",
-        "sha256": "5062a4bb16bbe9cb0eef89edbc48461ba68a881b1cf47f5cf6840de31206478c"
+        "filename": "[PUBLIC] Dota2 _ Tournament Overview _ Esports World Cup 2026.xlsx"
       }
     ],
     "notes": "The XLSX contains Google-Sheets-derived formulas represented as dummy functions. NETO must consume cached values rather than evaluate the formula text. Published match strings are split into teams; unpublished slots become TBD vs TBD.",

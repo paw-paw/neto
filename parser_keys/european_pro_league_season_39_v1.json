@@ -630,12 +630,11 @@
   },
   "metadata": {
     "created_at": "2026-07-12T00:57:12Z",
-    "created_by": "NETO corpus design",
+    "created_by": "NETO maintainers",
     "updated_at": null,
     "source_files": [
       {
-        "filename": "European Pro League Season 39.xlsx",
-        "sha256": "6b9d14f0bf81d94865855fd489684bcc1b868c6bdcac780e4eced9897f35a1d0"
+        "filename": "European Pro League Season 39.xlsx"
       }
     ],
     "notes": "One record set uses a tile-grid locator. Each tile origin contains the date; match rows are emitted at configured row offsets and fields are addressed relative to the emitted record anchor.",

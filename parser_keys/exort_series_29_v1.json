@@ -624,12 +624,11 @@
   },
   "metadata": {
     "created_at": "2026-07-12T00:57:12Z",
-    "created_by": "NETO corpus design",
+    "created_by": "NETO maintainers",
     "updated_at": null,
     "source_files": [
       {
-        "filename": "Exort Series 29.xlsx",
-        "sha256": "f0d54a6694de954a337ecdb1215240b62ff6432727e903ddc8c1985d3a18c258"
+        "filename": "Exort Series 29.xlsx"
       }
     ],
     "notes": "The schedule is visually wide but record-oriented: each match occupies one populated row. Dates omit the year, receive 2026 from the ParserKey, and normalize the observed .oN month typo before parsing. Formula-backed participants use cached values, safe direct references, or explicit TBD fallbacks with warnings.",

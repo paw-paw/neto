@@ -8407,8 +8407,7 @@
     "updated_at": null,
     "source_files": [
       {
-        "filename": "[Public] StarSeries S20 Barcelona 2026.xlsx",
-        "sha256": "38fba12a65af4422b00762e2293107a101a98098c468a9e7206e2195430d2d74"
+        "filename": "[Public] StarSeries S20 Barcelona 2026.xlsx"
       }
     ],
     "notes": "Schema-valid draft for all 68 visible series slots. Fourteen EU qualifier records with explicitly pending times remain exportable with time_pending warnings and blank UTC values. EU, NA, and SA coordinates follow the current public layout; the obsolete NA August 3 record set is disabled. Duplicate checks ignore rows only when both participants are declared placeholders. LAN participants remain explicit TBD placeholders until match assignments are published.",

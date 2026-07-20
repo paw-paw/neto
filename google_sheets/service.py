@@ -28,7 +28,7 @@ from .errors import (
 GOOGLE_SHEETS_HOST = "docs.google.com"
 EXPORT_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 EXPORT_STRATEGY = "google_sheets_public_xlsx_export"
-USER_AGENT = "NETO-google-sheets/0.1 (+public workbook ingestion)"
+USER_AGENT = "NETO-google-sheets/0.1 (+schedule ingestion)"
 _SHEET_PATH = re.compile(r"^/spreadsheets/d/([A-Za-z0-9_-]+)(?:/.*)?$")
 _SAFE_FINAL_HOSTS = (GOOGLE_SHEETS_HOST, ".googleusercontent.com")
 

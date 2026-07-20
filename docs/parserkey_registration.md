@@ -35,4 +35,4 @@ This boundary intentionally keeps the preliminary internal release credential-fr
 
 ## Resource policy
 
-Uploaded ParserKeys are treated as untrusted declarative input. In addition to the 1 MB JSON limit, v2 uploads are limited to 64 record sets, 5,000 operator nodes, 512 characters per regex pattern, 256 regex patterns, 50,000 anchors per locator, and 100,000 total anchors. These limits are deliberately above the current corpus and prevent obviously unbounded execution plans; they are not a substitute for restricting the app to trusted internal users.
+Uploaded ParserKeys are treated as untrusted declarative input. In addition to the 1 MB JSON limit, v2 uploads are limited to 64 record sets, 5,000 operator nodes, 512 characters per regex pattern, 256 regex patterns, 50,000 anchors per locator, and 100,000 total anchors. These limits accommodate expected production documents while preventing obviously unbounded execution plans; they are not a substitute for restricting the app to trusted internal users.

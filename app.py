@@ -73,7 +73,7 @@ INGESTION_METHODS = (
 
 
 def _parser_key_status(parser_key: object) -> str:
-    """Read status without requiring a newly imported ParserKey API."""
+    """Compatibility shim for ParserKey objects retained by Streamlit hot reload."""
 
     raw_data = getattr(parser_key, "raw_data", {})
     if not isinstance(raw_data, dict):

@@ -90,7 +90,6 @@ def canonical_view_dataframe(
         kind="stable",
     ).reset_index(drop=True)
 
-
 def _natural_date(value: object, date_format: str) -> str:
     text = "" if value is None else str(value).strip()
     match = re.fullmatch(r"(\d{4})-(\d{2})-(\d{2})", text)
@@ -152,24 +151,3 @@ def presentation_dataframe(
         },
         columns=list(PRESENTATION_COLUMNS),
     ).reset_index(drop=True)
-
-
-def timezone_difference_label(
-    canonical: pd.DataFrame, schedule_timezone: str, display_timezone: str
-) -> str:
-    """Describe view-zone offset minus schedule-zone offset for the first match."""
-
-    if canonical.empty:
-        return "—"
-    timestamp = pd.to_datetime(canonical.iloc[0]["start_time_utc"], errors="coerce", utc=True)
-    if pd.isna(timestamp):
-        return "—"
-    schedule_offset = timestamp.tz_convert(ZoneInfo(schedule_timezone)).utcoffset()
-    display_offset = timestamp.tz_convert(ZoneInfo(display_timezone)).utcoffset()
-    if schedule_offset is None or display_offset is None:
-        return "—"
-    hours = (display_offset - schedule_offset).total_seconds() / 3600
-    if hours == 0:
-        return "0 h"
-    formatted = f"{abs(hours):g}"
-    return f"{'+' if hours > 0 else '-'}{formatted} h"

@@ -1,0 +1,97 @@
+name: Deployment smoke
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install runtime dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Compile runtime
+        run: python -m compileall -q app.py parser google_sheets official_web wiki_ingestion
+
+      - name: Import app and validate runtime resources
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          import app
+          from parser.parser_keys import load_parser_keys
+
+          root = Path.cwd()
+          catalog = load_parser_keys(root / "parser_keys")
+          assert catalog.keys, "No ParserKeys were loaded"
+          assert not catalog.errors, "\n".join(
+              f"{error.file_name}: {error.message}" for error in catalog.errors
+          )
+          for parser_key in catalog.keys:
+              assert Path(parser_key.source_file or "").stem == parser_key.parser_key_id
+
+          required_assets = [
+              "assets/neto-theme.css",
+              "assets/neto-logo.png",
+              "assets/fonts/DMSans-Regular-Medium.woff2",
+              "assets/fonts/JetBrainsMono-Medium.woff2",
+              "assets/fonts/JetBrainsMono-Regular.woff2",
+          ]
+          missing = [path for path in required_assets if not (root / path).is_file()]
+          assert not missing, f"Missing runtime assets: {missing}"
+          print(f"Loaded {len(catalog.keys)} ParserKeys and all runtime assets")
+          PY
+
+      - name: Enforce public-distribution boundary
+        run: |
+          python - <<'PY'
+          import re
+          import subprocess
+          from pathlib import Path, PurePosixPath
+
+          tracked = subprocess.check_output(
+              ["git", "ls-files", "-z"]
+          ).decode("utf-8").split("\0")
+          tracked = [path for path in tracked if path]
+
+          forbidden_paths = []
+          for value in tracked:
+              path = PurePosixPath(value)
+              if "tests" in path.parts or path.suffix.casefold() == ".xlsx":
+                  forbidden_paths.append(value)
+          assert not forbidden_paths, (
+              "Private validation paths are versioned: " + ", ".join(forbidden_paths)
+          )
+
+          concrete_sheet = re.compile(
+              rb"docs\.google\.com/spreadsheets/d/[A-Za-z0-9_-]{20,}"
+          )
+          link_hits = []
+          for value in tracked:
+              data = Path(value).read_bytes()
+              if concrete_sheet.search(data):
+                  link_hits.append(value)
+          assert not link_hits, (
+              "Concrete Google Sheet identifiers are versioned: " + ", ".join(link_hits)
+          )
+          print(f"Public boundary verified across {len(tracked)} tracked files")
+          PY

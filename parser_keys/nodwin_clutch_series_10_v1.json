@@ -2581,12 +2581,11 @@
   },
   "metadata": {
     "created_at": "2026-07-12T00:57:12Z",
-    "created_by": "NETO corpus design",
+    "created_by": "NETO maintainers",
     "updated_at": null,
     "source_files": [
       {
-        "filename": "Schedule - NODWIN Clutch Series #10.xlsx",
-        "sha256": "f412a65832e6650a9bd2f6867d63dbc8a4d03a8f1f0de9562deaad73d194d6fc"
+        "filename": "Schedule - NODWIN Clutch Series #10.xlsx"
       }
     ],
     "notes": "Three phase-specific sheets use vertically merged dates. Several future participant cells are blank; the ParserKey emits TBD while preserving the scheduled slot. Playoff BO and stage are extracted from a compound round cell.",

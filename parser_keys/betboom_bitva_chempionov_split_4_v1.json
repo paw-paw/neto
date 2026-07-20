@@ -1,8 +1,8 @@
 {
   "$schema": "./neto_parserkey_v2.schema.json",
   "schema_version": "neto.parser_key.v2",
-  "parser_key_id": "betboom_rise_of_legends_10_v1",
-  "key_name": "BetBoom Rise of Legends 10",
+  "parser_key_id": "betboom_bitva_chempionov_split_4_v1",
+  "key_name": "BetBoom Битва Чемпионов — Сплит #4",
   "status": "draft",
   "runtime": {
     "minimum_neto_version": "0.1.0",
@@ -14,7 +14,6 @@
       "datetime.parse_date",
       "datetime.parse_time",
       "literal.value",
-      "predicate.any",
       "predicate.not_empty",
       "records.tile_grid",
       "sheet.exact",
@@ -24,12 +23,12 @@
     "required_plugins": []
   },
   "tournament": {
-    "name": "BetBoom Rise of Legends 10",
-    "game": "Mobile Legends: Bang Bang",
+    "name": "BetBoom Битва Чемпионов — Сплит #4",
+    "game": "Мир танков",
     "organizer": null,
     "base_timezone": "Europe/Moscow",
     "timezone_source": "parser_key",
-    "season_or_edition": "10"
+    "season_or_edition": "Split #4 (2026)"
   },
   "workbook": {
     "file_type": "xlsx",
@@ -43,23 +42,35 @@
       "on_missing_cached_value": "warning"
     },
     "hidden_content_policy": {
-      "include_hidden_sheets": false,
+      "include_hidden_sheets": true,
       "include_hidden_rows": false,
       "include_hidden_columns": false
     }
   },
   "sources": [
     {
-      "source_id": "cq_playoffs_schedule",
+      "source_id": "promotions_schedule",
       "sheet_locator": {
         "op": "sheet.exact",
         "args": {
-          "sheet_name": "Schedule | CQ + Playoffs"
+          "sheet_name": "Schedule | Promotions"
         }
       },
       "value_mode": "inherit",
       "required": true,
-      "description": "Authoritative Closed Qualifier and Playoffs schedule blocks."
+      "description": "Authoritative hidden Promotion A and Promotion B schedule."
+    },
+    {
+      "source_id": "cq_split_finals_schedule",
+      "sheet_locator": {
+        "op": "sheet.exact",
+        "args": {
+          "sheet_name": "Schedule | CQ & Split Finals"
+        }
+      },
+      "value_mode": "inherit",
+      "required": true,
+      "description": "Authoritative hidden Closed Qualifier and Split Finals schedule."
     },
     {
       "source_id": "division1_schedule",
@@ -84,63 +95,45 @@
       "value_mode": "inherit",
       "required": true,
       "description": "Authoritative Division 2 double round-robin schedule."
+    },
+    {
+      "source_id": "division3_schedule",
+      "sheet_locator": {
+        "op": "sheet.exact",
+        "args": {
+          "sheet_name": "Schedule | 3 Division"
+        }
+      },
+      "value_mode": "inherit",
+      "required": true,
+      "description": "Authoritative Division 3 double round-robin schedule."
     }
   ],
   "record_sets": [
     {
-      "record_set_id": "closed_qualifier",
+      "record_set_id": "promotion_a",
       "enabled": true,
-      "source_id": "cq_playoffs_schedule",
+      "source_id": "promotions_schedule",
       "locator": {
         "op": "records.tile_grid",
         "args": {
           "tiles": [
             {
-              "origin": "E2",
-              "record_row_offsets": [
-                2,
-                3,
-                4,
-                5
-              ],
-              "tile_id": "cq_2026_06_15"
-            },
-            {
-              "origin": "E8",
-              "record_row_offsets": [
-                2,
-                3,
-                4,
-                5
-              ],
-              "tile_id": "cq_2026_06_16"
-            },
-            {
-              "origin": "E14",
-              "record_row_offsets": [
-                2,
-                3,
-                4,
-                5
-              ],
-              "tile_id": "cq_2026_06_17"
-            },
-            {
-              "origin": "E20",
+              "origin": "E4",
               "record_row_offsets": [
                 2,
                 3,
                 4
               ],
-              "tile_id": "cq_2026_06_18"
+              "tile_id": "promotion_a_2026_06_13_e4"
             },
             {
-              "origin": "E25",
+              "origin": "E9",
               "record_row_offsets": [
                 2,
                 3
               ],
-              "tile_id": "cq_2026_06_19"
+              "tile_id": "promotion_a_2026_06_14_e9"
             }
           ],
           "record_anchor": {
@@ -151,36 +144,16 @@
         }
       },
       "filter": {
-        "op": "predicate.any",
+        "op": "predicate.not_empty",
         "args": {
-          "predicates": [
-            {
-              "op": "predicate.not_empty",
-              "args": {
-                "value": {
-                  "op": "cell.relative",
-                  "args": {
-                    "base": "record_anchor",
-                    "row_offset": 0,
-                    "column_offset": 0
-                  }
-                }
-              }
-            },
-            {
-              "op": "predicate.not_empty",
-              "args": {
-                "value": {
-                  "op": "cell.relative",
-                  "args": {
-                    "base": "record_anchor",
-                    "row_offset": 0,
-                    "column_offset": 4
-                  }
-                }
-              }
+          "value": {
+            "op": "cell.relative",
+            "args": {
+              "base": "record_anchor",
+              "row_offset": 0,
+              "column_offset": 6
             }
-          ]
+          }
         }
       },
       "context": {},
@@ -218,7 +191,7 @@
           "required": true,
           "on_missing": "blocking_error",
           "default": null,
-          "description": "Local schedule date from the tile header.",
+          "description": "Local schedule date from the merged tile header.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -299,7 +272,7 @@
           "required": true,
           "on_missing": "use_default",
           "default": "TBD",
-          "description": "First participant; TBD only for a clearly scheduled unpublished slot.",
+          "description": "First participant; TBD is used only for a clearly scheduled unpublished slot.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -342,7 +315,661 @@
           "required": true,
           "on_missing": "use_default",
           "default": "TBD",
-          "description": "Second participant; TBD only for a clearly scheduled unpublished slot.",
+          "description": "Second participant; TBD is used only for a clearly scheduled unpublished slot.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stage": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Promotion A"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "warning",
+          "default": null,
+          "description": "Tournament phase derived from the source sheet and section.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "bo": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 5
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "warning",
+          "default": null,
+          "description": "Workbook best-of format.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "match_label": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 6
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "warning",
+          "default": null,
+          "description": "Workbook match number or label.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "additional_fields": {},
+      "overrides": [],
+      "provenance": {
+        "enabled": true,
+        "include_source_coordinates": true,
+        "include_transform_chain": true,
+        "include_override_reason": true
+      }
+    },
+    {
+      "record_set_id": "promotion_b",
+      "enabled": true,
+      "source_id": "promotions_schedule",
+      "locator": {
+        "op": "records.tile_grid",
+        "args": {
+          "tiles": [
+            {
+              "origin": "E15",
+              "record_row_offsets": [
+                2,
+                3,
+                4
+              ],
+              "tile_id": "promotion_b_2026_06_11_e15"
+            },
+            {
+              "origin": "E20",
+              "record_row_offsets": [
+                2,
+                3
+              ],
+              "tile_id": "promotion_b_2026_06_12_e20"
+            }
+          ],
+          "record_anchor": {
+            "base": "tile_origin",
+            "column_offset": 0
+          },
+          "emit_order": "tiles_then_row_offsets"
+        }
+      },
+      "filter": {
+        "op": "predicate.not_empty",
+        "args": {
+          "value": {
+            "op": "cell.relative",
+            "args": {
+              "base": "record_anchor",
+              "row_offset": 0,
+              "column_offset": 6
+            }
+          }
+        }
+      },
+      "context": {},
+      "extractors": [],
+      "fields": {
+        "date": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "tile_origin",
+                "row_offset": 0,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_date",
+                "args": {
+                  "formats": [
+                    "auto"
+                  ],
+                  "locale": "en"
+                }
+              },
+              {
+                "op": "datetime.format_date",
+                "args": {
+                  "format": "%Y-%m-%d"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local schedule date from the merged tile header.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "time": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 2
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_time",
+                "args": {
+                  "formats": [
+                    "auto"
+                  ]
+                }
+              },
+              {
+                "op": "datetime.format_time",
+                "args": {
+                  "format": "%H:%M"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local scheduled start time.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_a": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "First participant; TBD is used only for a clearly scheduled unpublished slot.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_b": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 4
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "Second participant; TBD is used only for a clearly scheduled unpublished slot.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stage": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Promotion B"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "warning",
+          "default": null,
+          "description": "Tournament phase derived from the source sheet and section.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "bo": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 5
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "warning",
+          "default": null,
+          "description": "Workbook best-of format.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "match_label": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 6
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "warning",
+          "default": null,
+          "description": "Workbook match number or label.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "additional_fields": {},
+      "overrides": [],
+      "provenance": {
+        "enabled": true,
+        "include_source_coordinates": true,
+        "include_transform_chain": true,
+        "include_override_reason": true
+      }
+    },
+    {
+      "record_set_id": "closed_qualifier",
+      "enabled": true,
+      "source_id": "cq_split_finals_schedule",
+      "locator": {
+        "op": "records.tile_grid",
+        "args": {
+          "tiles": [
+            {
+              "origin": "B3",
+              "record_row_offsets": [
+                2,
+                3,
+                4,
+                5
+              ],
+              "tile_id": "closed_qualifier_2026_05_22_b3"
+            },
+            {
+              "origin": "B9",
+              "record_row_offsets": [
+                2,
+                3,
+                4,
+                5
+              ],
+              "tile_id": "closed_qualifier_2026_05_23_b9"
+            },
+            {
+              "origin": "B15",
+              "record_row_offsets": [
+                2,
+                3,
+                4,
+                5
+              ],
+              "tile_id": "closed_qualifier_2026_05_24_b15"
+            },
+            {
+              "origin": "B21",
+              "record_row_offsets": [
+                2,
+                3,
+                4,
+                5
+              ],
+              "tile_id": "closed_qualifier_2026_05_29_b21"
+            },
+            {
+              "origin": "B27",
+              "record_row_offsets": [
+                2,
+                3,
+                4
+              ],
+              "tile_id": "closed_qualifier_2026_05_30_b27"
+            },
+            {
+              "origin": "B32",
+              "record_row_offsets": [
+                2,
+                3
+              ],
+              "tile_id": "closed_qualifier_2026_05_31_b32"
+            }
+          ],
+          "record_anchor": {
+            "base": "tile_origin",
+            "column_offset": 0
+          },
+          "emit_order": "tiles_then_row_offsets"
+        }
+      },
+      "filter": {
+        "op": "predicate.not_empty",
+        "args": {
+          "value": {
+            "op": "cell.relative",
+            "args": {
+              "base": "record_anchor",
+              "row_offset": 0,
+              "column_offset": 6
+            }
+          }
+        }
+      },
+      "context": {},
+      "extractors": [],
+      "fields": {
+        "date": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "tile_origin",
+                "row_offset": 0,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_date",
+                "args": {
+                  "formats": [
+                    "auto"
+                  ],
+                  "locale": "en"
+                }
+              },
+              {
+                "op": "datetime.format_date",
+                "args": {
+                  "format": "%Y-%m-%d"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local schedule date from the merged tile header.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "time": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 2
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_time",
+                "args": {
+                  "formats": [
+                    "auto"
+                  ]
+                }
+              },
+              {
+                "op": "datetime.format_time",
+                "args": {
+                  "format": "%H:%M"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local scheduled start time.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_a": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "First participant; TBD is used only for a clearly scheduled unpublished slot.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_b": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 4
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "Second participant; TBD is used only for a clearly scheduled unpublished slot.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -363,7 +990,7 @@
           "required": false,
           "on_missing": "warning",
           "default": null,
-          "description": "Tournament phase.",
+          "description": "Tournament phase derived from the source sheet and section.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -395,7 +1022,7 @@
           "required": false,
           "on_missing": "warning",
           "default": null,
-          "description": "Best-of format.",
+          "description": "Workbook best-of format.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -427,7 +1054,7 @@
           "required": false,
           "on_missing": "warning",
           "default": null,
-          "description": "Workbook match label.",
+          "description": "Workbook match number or label.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -445,30 +1072,30 @@
       }
     },
     {
-      "record_set_id": "playoffs",
+      "record_set_id": "split_finals",
       "enabled": true,
-      "source_id": "cq_playoffs_schedule",
+      "source_id": "cq_split_finals_schedule",
       "locator": {
         "op": "records.tile_grid",
         "args": {
           "tiles": [
             {
-              "origin": "M2",
+              "origin": "I3",
               "record_row_offsets": [
                 2,
                 3,
                 4,
                 5
               ],
-              "tile_id": "playoffs_2026_06_21"
+              "tile_id": "split_finals_2026_06_06_i3"
             },
             {
-              "origin": "M8",
+              "origin": "I9",
               "record_row_offsets": [
                 2,
                 3
               ],
-              "tile_id": "playoffs_2026_08_22"
+              "tile_id": "split_finals_2026_06_07_i9"
             }
           ],
           "record_anchor": {
@@ -479,36 +1106,16 @@
         }
       },
       "filter": {
-        "op": "predicate.any",
+        "op": "predicate.not_empty",
         "args": {
-          "predicates": [
-            {
-              "op": "predicate.not_empty",
-              "args": {
-                "value": {
-                  "op": "cell.relative",
-                  "args": {
-                    "base": "record_anchor",
-                    "row_offset": 0,
-                    "column_offset": 0
-                  }
-                }
-              }
-            },
-            {
-              "op": "predicate.not_empty",
-              "args": {
-                "value": {
-                  "op": "cell.relative",
-                  "args": {
-                    "base": "record_anchor",
-                    "row_offset": 0,
-                    "column_offset": 4
-                  }
-                }
-              }
+          "value": {
+            "op": "cell.relative",
+            "args": {
+              "base": "record_anchor",
+              "row_offset": 0,
+              "column_offset": 6
             }
-          ]
+          }
         }
       },
       "context": {},
@@ -546,7 +1153,7 @@
           "required": true,
           "on_missing": "blocking_error",
           "default": null,
-          "description": "Local schedule date from the tile header.",
+          "description": "Local schedule date from the merged tile header.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -582,7 +1189,7 @@
             "fallbacks": []
           },
           "required": true,
-          "on_missing": "warning",
+          "on_missing": "blocking_error",
           "default": null,
           "description": "Local scheduled start time.",
           "provenance": {
@@ -627,7 +1234,7 @@
           "required": true,
           "on_missing": "use_default",
           "default": "TBD",
-          "description": "First participant; TBD only for a clearly scheduled unpublished slot.",
+          "description": "First participant; TBD is used only for a clearly scheduled unpublished slot.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -670,7 +1277,7 @@
           "required": true,
           "on_missing": "use_default",
           "default": "TBD",
-          "description": "Second participant; TBD only for a clearly scheduled unpublished slot.",
+          "description": "Second participant; TBD is used only for a clearly scheduled unpublished slot.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -678,6 +1285,27 @@
           }
         },
         "stage": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Split Finals"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "warning",
+          "default": null,
+          "description": "Tournament phase derived from the source sheet and section.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "bo": {
           "value": {
             "source": {
               "op": "cell.relative",
@@ -702,14 +1330,14 @@
           "required": false,
           "on_missing": "warning",
           "default": null,
-          "description": "Tournament phase.",
+          "description": "Workbook best-of format.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
             "include_source_coordinates": true
           }
         },
-        "bo": {
+        "match_label": {
           "value": {
             "source": {
               "op": "cell.relative",
@@ -734,39 +1362,7 @@
           "required": false,
           "on_missing": "warning",
           "default": null,
-          "description": "Best-of format.",
-          "provenance": {
-            "enabled": true,
-            "include_transform_chain": true,
-            "include_source_coordinates": true
-          }
-        },
-        "match_label": {
-          "value": {
-            "source": {
-              "op": "cell.relative",
-              "args": {
-                "base": "record_anchor",
-                "row_offset": 0,
-                "column_offset": 7
-              }
-            },
-            "transforms": [
-              {
-                "op": "text.to_string",
-                "args": {}
-              },
-              {
-                "op": "text.trim",
-                "args": {}
-              }
-            ],
-            "fallbacks": []
-          },
-          "required": false,
-          "on_missing": "warning",
-          "default": null,
-          "description": "Workbook match label.",
+          "description": "Workbook match number or label.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -799,7 +1395,7 @@
                 4,
                 5
               ],
-              "tile_id": "division1_round1_1"
+              "tile_id": "division1_round1_2026_06_25_e3"
             },
             {
               "origin": "E9",
@@ -809,7 +1405,7 @@
                 4,
                 5
               ],
-              "tile_id": "division1_round1_2"
+              "tile_id": "division1_round1_2026_06_26_e9"
             },
             {
               "origin": "E15",
@@ -819,7 +1415,7 @@
                 4,
                 5
               ],
-              "tile_id": "division1_round1_3"
+              "tile_id": "division1_round1_2026_07_02_e15"
             },
             {
               "origin": "E21",
@@ -829,7 +1425,7 @@
                 4,
                 5
               ],
-              "tile_id": "division1_round1_4"
+              "tile_id": "division1_round1_2026_07_03_e21"
             },
             {
               "origin": "E27",
@@ -839,7 +1435,7 @@
                 4,
                 5
               ],
-              "tile_id": "division1_round1_5"
+              "tile_id": "division1_round1_2026_07_09_e27"
             },
             {
               "origin": "E33",
@@ -849,7 +1445,7 @@
                 4,
                 5
               ],
-              "tile_id": "division1_round1_6"
+              "tile_id": "division1_round1_2026_07_10_e33"
             },
             {
               "origin": "E39",
@@ -859,7 +1455,7 @@
                 4,
                 5
               ],
-              "tile_id": "division1_round1_7"
+              "tile_id": "division1_round1_2026_07_16_e39"
             }
           ],
           "record_anchor": {
@@ -870,36 +1466,16 @@
         }
       },
       "filter": {
-        "op": "predicate.any",
+        "op": "predicate.not_empty",
         "args": {
-          "predicates": [
-            {
-              "op": "predicate.not_empty",
-              "args": {
-                "value": {
-                  "op": "cell.relative",
-                  "args": {
-                    "base": "record_anchor",
-                    "row_offset": 0,
-                    "column_offset": 0
-                  }
-                }
-              }
-            },
-            {
-              "op": "predicate.not_empty",
-              "args": {
-                "value": {
-                  "op": "cell.relative",
-                  "args": {
-                    "base": "record_anchor",
-                    "row_offset": 0,
-                    "column_offset": 4
-                  }
-                }
-              }
+          "value": {
+            "op": "cell.relative",
+            "args": {
+              "base": "record_anchor",
+              "row_offset": 0,
+              "column_offset": 5
             }
-          ]
+          }
         }
       },
       "context": {},
@@ -937,7 +1513,7 @@
           "required": true,
           "on_missing": "blocking_error",
           "default": null,
-          "description": "Local schedule date from the tile header.",
+          "description": "Local schedule date from the merged tile header.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -1018,7 +1594,7 @@
           "required": true,
           "on_missing": "use_default",
           "default": "TBD",
-          "description": "First participant; TBD only for a clearly scheduled unpublished slot.",
+          "description": "First participant; TBD is used only for a clearly scheduled unpublished slot.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -1061,7 +1637,7 @@
           "required": true,
           "on_missing": "use_default",
           "default": "TBD",
-          "description": "Second participant; TBD only for a clearly scheduled unpublished slot.",
+          "description": "Second participant; TBD is used only for a clearly scheduled unpublished slot.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -1082,7 +1658,7 @@
           "required": false,
           "on_missing": "warning",
           "default": null,
-          "description": "Tournament phase.",
+          "description": "Tournament phase derived from the source sheet and section.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -1094,7 +1670,7 @@
             "source": {
               "op": "literal.value",
               "args": {
-                "value": "BO3"
+                "value": "BO7"
               }
             },
             "transforms": [],
@@ -1103,7 +1679,7 @@
           "required": false,
           "on_missing": "warning",
           "default": null,
-          "description": "Best-of format.",
+          "description": "Stable best-of format documented in Tournament format for this division.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -1135,7 +1711,7 @@
           "required": false,
           "on_missing": "warning",
           "default": null,
-          "description": "Workbook match label.",
+          "description": "Workbook match number or label.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -1168,7 +1744,7 @@
                 4,
                 5
               ],
-              "tile_id": "division1_round2_1"
+              "tile_id": "division1_round2_2026_07_23_k3"
             },
             {
               "origin": "K9",
@@ -1178,7 +1754,7 @@
                 4,
                 5
               ],
-              "tile_id": "division1_round2_2"
+              "tile_id": "division1_round2_2026_07_24_k9"
             },
             {
               "origin": "K15",
@@ -1188,7 +1764,7 @@
                 4,
                 5
               ],
-              "tile_id": "division1_round2_3"
+              "tile_id": "division1_round2_2026_07_30_k15"
             },
             {
               "origin": "K21",
@@ -1198,7 +1774,7 @@
                 4,
                 5
               ],
-              "tile_id": "division1_round2_4"
+              "tile_id": "division1_round2_2026_07_31_k21"
             },
             {
               "origin": "K27",
@@ -1208,7 +1784,7 @@
                 4,
                 5
               ],
-              "tile_id": "division1_round2_5"
+              "tile_id": "division1_round2_2026_08_06_k27"
             },
             {
               "origin": "K33",
@@ -1218,7 +1794,7 @@
                 4,
                 5
               ],
-              "tile_id": "division1_round2_6"
+              "tile_id": "division1_round2_2026_08_07_k33"
             },
             {
               "origin": "K39",
@@ -1228,7 +1804,7 @@
                 4,
                 5
               ],
-              "tile_id": "division1_round2_7"
+              "tile_id": "division1_round2_2026_08_13_k39"
             }
           ],
           "record_anchor": {
@@ -1239,36 +1815,16 @@
         }
       },
       "filter": {
-        "op": "predicate.any",
+        "op": "predicate.not_empty",
         "args": {
-          "predicates": [
-            {
-              "op": "predicate.not_empty",
-              "args": {
-                "value": {
-                  "op": "cell.relative",
-                  "args": {
-                    "base": "record_anchor",
-                    "row_offset": 0,
-                    "column_offset": 0
-                  }
-                }
-              }
-            },
-            {
-              "op": "predicate.not_empty",
-              "args": {
-                "value": {
-                  "op": "cell.relative",
-                  "args": {
-                    "base": "record_anchor",
-                    "row_offset": 0,
-                    "column_offset": 4
-                  }
-                }
-              }
+          "value": {
+            "op": "cell.relative",
+            "args": {
+              "base": "record_anchor",
+              "row_offset": 0,
+              "column_offset": 5
             }
-          ]
+          }
         }
       },
       "context": {},
@@ -1306,7 +1862,7 @@
           "required": true,
           "on_missing": "blocking_error",
           "default": null,
-          "description": "Local schedule date from the tile header.",
+          "description": "Local schedule date from the merged tile header.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -1387,7 +1943,7 @@
           "required": true,
           "on_missing": "use_default",
           "default": "TBD",
-          "description": "First participant; TBD only for a clearly scheduled unpublished slot.",
+          "description": "First participant; TBD is used only for a clearly scheduled unpublished slot.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -1430,7 +1986,7 @@
           "required": true,
           "on_missing": "use_default",
           "default": "TBD",
-          "description": "Second participant; TBD only for a clearly scheduled unpublished slot.",
+          "description": "Second participant; TBD is used only for a clearly scheduled unpublished slot.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -1451,7 +2007,7 @@
           "required": false,
           "on_missing": "warning",
           "default": null,
-          "description": "Tournament phase.",
+          "description": "Tournament phase derived from the source sheet and section.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -1463,7 +2019,7 @@
             "source": {
               "op": "literal.value",
               "args": {
-                "value": "BO3"
+                "value": "BO7"
               }
             },
             "transforms": [],
@@ -1472,7 +2028,7 @@
           "required": false,
           "on_missing": "warning",
           "default": null,
-          "description": "Best-of format.",
+          "description": "Stable best-of format documented in Tournament format for this division.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -1504,7 +2060,7 @@
           "required": false,
           "on_missing": "warning",
           "default": null,
-          "description": "Workbook match label.",
+          "description": "Workbook match number or label.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -1537,7 +2093,7 @@
                 4,
                 5
               ],
-              "tile_id": "division2_round1_1"
+              "tile_id": "division2_round1_2026_06_23_e3"
             },
             {
               "origin": "E9",
@@ -1547,7 +2103,7 @@
                 4,
                 5
               ],
-              "tile_id": "division2_round1_2"
+              "tile_id": "division2_round1_2026_06_24_e9"
             },
             {
               "origin": "E15",
@@ -1557,7 +2113,7 @@
                 4,
                 5
               ],
-              "tile_id": "division2_round1_3"
+              "tile_id": "division2_round1_2026_06_30_e15"
             },
             {
               "origin": "E21",
@@ -1567,7 +2123,7 @@
                 4,
                 5
               ],
-              "tile_id": "division2_round1_4"
+              "tile_id": "division2_round1_2026_07_01_e21"
             },
             {
               "origin": "E27",
@@ -1577,7 +2133,7 @@
                 4,
                 5
               ],
-              "tile_id": "division2_round1_5"
+              "tile_id": "division2_round1_2026_07_07_e27"
             },
             {
               "origin": "E33",
@@ -1587,7 +2143,7 @@
                 4,
                 5
               ],
-              "tile_id": "division2_round1_6"
+              "tile_id": "division2_round1_2026_07_08_e33"
             },
             {
               "origin": "E39",
@@ -1597,7 +2153,7 @@
                 4,
                 5
               ],
-              "tile_id": "division2_round1_7"
+              "tile_id": "division2_round1_2026_07_15_e39"
             }
           ],
           "record_anchor": {
@@ -1608,36 +2164,16 @@
         }
       },
       "filter": {
-        "op": "predicate.any",
+        "op": "predicate.not_empty",
         "args": {
-          "predicates": [
-            {
-              "op": "predicate.not_empty",
-              "args": {
-                "value": {
-                  "op": "cell.relative",
-                  "args": {
-                    "base": "record_anchor",
-                    "row_offset": 0,
-                    "column_offset": 0
-                  }
-                }
-              }
-            },
-            {
-              "op": "predicate.not_empty",
-              "args": {
-                "value": {
-                  "op": "cell.relative",
-                  "args": {
-                    "base": "record_anchor",
-                    "row_offset": 0,
-                    "column_offset": 4
-                  }
-                }
-              }
+          "value": {
+            "op": "cell.relative",
+            "args": {
+              "base": "record_anchor",
+              "row_offset": 0,
+              "column_offset": 5
             }
-          ]
+          }
         }
       },
       "context": {},
@@ -1675,7 +2211,7 @@
           "required": true,
           "on_missing": "blocking_error",
           "default": null,
-          "description": "Local schedule date from the tile header.",
+          "description": "Local schedule date from the merged tile header.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -1756,7 +2292,7 @@
           "required": true,
           "on_missing": "use_default",
           "default": "TBD",
-          "description": "First participant; TBD only for a clearly scheduled unpublished slot.",
+          "description": "First participant; TBD is used only for a clearly scheduled unpublished slot.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -1799,7 +2335,7 @@
           "required": true,
           "on_missing": "use_default",
           "default": "TBD",
-          "description": "Second participant; TBD only for a clearly scheduled unpublished slot.",
+          "description": "Second participant; TBD is used only for a clearly scheduled unpublished slot.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -1820,7 +2356,7 @@
           "required": false,
           "on_missing": "warning",
           "default": null,
-          "description": "Tournament phase.",
+          "description": "Tournament phase derived from the source sheet and section.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -1832,7 +2368,7 @@
             "source": {
               "op": "literal.value",
               "args": {
-                "value": "BO3"
+                "value": "BO7"
               }
             },
             "transforms": [],
@@ -1841,7 +2377,7 @@
           "required": false,
           "on_missing": "warning",
           "default": null,
-          "description": "Best-of format.",
+          "description": "Stable best-of format documented in Tournament format for this division.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -1873,7 +2409,7 @@
           "required": false,
           "on_missing": "warning",
           "default": null,
-          "description": "Workbook match label.",
+          "description": "Workbook match number or label.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -1906,7 +2442,7 @@
                 4,
                 5
               ],
-              "tile_id": "division2_round2_1"
+              "tile_id": "division2_round2_2026_07_21_k3"
             },
             {
               "origin": "K9",
@@ -1916,7 +2452,7 @@
                 4,
                 5
               ],
-              "tile_id": "division2_round2_2"
+              "tile_id": "division2_round2_2026_07_22_k9"
             },
             {
               "origin": "K15",
@@ -1926,7 +2462,7 @@
                 4,
                 5
               ],
-              "tile_id": "division2_round2_3"
+              "tile_id": "division2_round2_2026_07_28_k15"
             },
             {
               "origin": "K21",
@@ -1936,7 +2472,7 @@
                 4,
                 5
               ],
-              "tile_id": "division2_round2_4"
+              "tile_id": "division2_round2_2026_07_29_k21"
             },
             {
               "origin": "K27",
@@ -1946,7 +2482,7 @@
                 4,
                 5
               ],
-              "tile_id": "division2_round2_5"
+              "tile_id": "division2_round2_2026_08_04_k27"
             },
             {
               "origin": "K33",
@@ -1956,7 +2492,7 @@
                 4,
                 5
               ],
-              "tile_id": "division2_round2_6"
+              "tile_id": "division2_round2_2026_08_05_k33"
             },
             {
               "origin": "K39",
@@ -1966,7 +2502,7 @@
                 4,
                 5
               ],
-              "tile_id": "division2_round2_7"
+              "tile_id": "division2_round2_2026_08_12_k39"
             }
           ],
           "record_anchor": {
@@ -1977,36 +2513,16 @@
         }
       },
       "filter": {
-        "op": "predicate.any",
+        "op": "predicate.not_empty",
         "args": {
-          "predicates": [
-            {
-              "op": "predicate.not_empty",
-              "args": {
-                "value": {
-                  "op": "cell.relative",
-                  "args": {
-                    "base": "record_anchor",
-                    "row_offset": 0,
-                    "column_offset": 0
-                  }
-                }
-              }
-            },
-            {
-              "op": "predicate.not_empty",
-              "args": {
-                "value": {
-                  "op": "cell.relative",
-                  "args": {
-                    "base": "record_anchor",
-                    "row_offset": 0,
-                    "column_offset": 4
-                  }
-                }
-              }
+          "value": {
+            "op": "cell.relative",
+            "args": {
+              "base": "record_anchor",
+              "row_offset": 0,
+              "column_offset": 5
             }
-          ]
+          }
         }
       },
       "context": {},
@@ -2044,7 +2560,7 @@
           "required": true,
           "on_missing": "blocking_error",
           "default": null,
-          "description": "Local schedule date from the tile header.",
+          "description": "Local schedule date from the merged tile header.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -2125,7 +2641,7 @@
           "required": true,
           "on_missing": "use_default",
           "default": "TBD",
-          "description": "First participant; TBD only for a clearly scheduled unpublished slot.",
+          "description": "First participant; TBD is used only for a clearly scheduled unpublished slot.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -2168,7 +2684,7 @@
           "required": true,
           "on_missing": "use_default",
           "default": "TBD",
-          "description": "Second participant; TBD only for a clearly scheduled unpublished slot.",
+          "description": "Second participant; TBD is used only for a clearly scheduled unpublished slot.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -2189,7 +2705,7 @@
           "required": false,
           "on_missing": "warning",
           "default": null,
-          "description": "Tournament phase.",
+          "description": "Tournament phase derived from the source sheet and section.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -2201,7 +2717,7 @@
             "source": {
               "op": "literal.value",
               "args": {
-                "value": "BO3"
+                "value": "BO7"
               }
             },
             "transforms": [],
@@ -2210,7 +2726,7 @@
           "required": false,
           "on_missing": "warning",
           "default": null,
-          "description": "Best-of format.",
+          "description": "Stable best-of format documented in Tournament format for this division.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -2242,7 +2758,705 @@
           "required": false,
           "on_missing": "warning",
           "default": null,
-          "description": "Workbook match label.",
+          "description": "Workbook match number or label.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "additional_fields": {},
+      "overrides": [],
+      "provenance": {
+        "enabled": true,
+        "include_source_coordinates": true,
+        "include_transform_chain": true,
+        "include_override_reason": true
+      }
+    },
+    {
+      "record_set_id": "division3_round1",
+      "enabled": true,
+      "source_id": "division3_schedule",
+      "locator": {
+        "op": "records.tile_grid",
+        "args": {
+          "tiles": [
+            {
+              "origin": "E3",
+              "record_row_offsets": [
+                2,
+                3,
+                4,
+                5
+              ],
+              "tile_id": "division3_round1_2026_06_27_e3"
+            },
+            {
+              "origin": "E9",
+              "record_row_offsets": [
+                2,
+                3,
+                4,
+                5
+              ],
+              "tile_id": "division3_round1_2026_06_29_e9"
+            },
+            {
+              "origin": "E15",
+              "record_row_offsets": [
+                2,
+                3,
+                4,
+                5
+              ],
+              "tile_id": "division3_round1_2026_07_04_e15"
+            },
+            {
+              "origin": "E21",
+              "record_row_offsets": [
+                2,
+                3,
+                4,
+                5
+              ],
+              "tile_id": "division3_round1_2026_07_06_e21"
+            },
+            {
+              "origin": "E27",
+              "record_row_offsets": [
+                2,
+                3,
+                4,
+                5
+              ],
+              "tile_id": "division3_round1_2026_07_11_e27"
+            },
+            {
+              "origin": "E33",
+              "record_row_offsets": [
+                2,
+                3,
+                4,
+                5
+              ],
+              "tile_id": "division3_round1_2026_07_13_e33"
+            },
+            {
+              "origin": "E39",
+              "record_row_offsets": [
+                2,
+                3,
+                4,
+                5
+              ],
+              "tile_id": "division3_round1_2026_07_14_e39"
+            }
+          ],
+          "record_anchor": {
+            "base": "tile_origin",
+            "column_offset": 0
+          },
+          "emit_order": "tiles_then_row_offsets"
+        }
+      },
+      "filter": {
+        "op": "predicate.not_empty",
+        "args": {
+          "value": {
+            "op": "cell.relative",
+            "args": {
+              "base": "record_anchor",
+              "row_offset": 0,
+              "column_offset": 5
+            }
+          }
+        }
+      },
+      "context": {},
+      "extractors": [],
+      "fields": {
+        "date": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "tile_origin",
+                "row_offset": 0,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_date",
+                "args": {
+                  "formats": [
+                    "auto"
+                  ],
+                  "locale": "en"
+                }
+              },
+              {
+                "op": "datetime.format_date",
+                "args": {
+                  "format": "%Y-%m-%d"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local schedule date from the merged tile header.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "time": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 2
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_time",
+                "args": {
+                  "formats": [
+                    "auto"
+                  ]
+                }
+              },
+              {
+                "op": "datetime.format_time",
+                "args": {
+                  "format": "%H:%M"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local scheduled start time.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_a": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "First participant; TBD is used only for a clearly scheduled unpublished slot.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_b": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 4
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "Second participant; TBD is used only for a clearly scheduled unpublished slot.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stage": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Division 3 — Round 1"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "warning",
+          "default": null,
+          "description": "Tournament phase derived from the source sheet and section.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "bo": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "BO7"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "warning",
+          "default": null,
+          "description": "Stable best-of format documented in Tournament format for this division.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "match_label": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 5
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "warning",
+          "default": null,
+          "description": "Workbook match number or label.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        }
+      },
+      "additional_fields": {},
+      "overrides": [],
+      "provenance": {
+        "enabled": true,
+        "include_source_coordinates": true,
+        "include_transform_chain": true,
+        "include_override_reason": true
+      }
+    },
+    {
+      "record_set_id": "division3_round2",
+      "enabled": true,
+      "source_id": "division3_schedule",
+      "locator": {
+        "op": "records.tile_grid",
+        "args": {
+          "tiles": [
+            {
+              "origin": "K3",
+              "record_row_offsets": [
+                2,
+                3,
+                4,
+                5
+              ],
+              "tile_id": "division3_round2_2026_07_25_k3"
+            },
+            {
+              "origin": "K9",
+              "record_row_offsets": [
+                2,
+                3,
+                4,
+                5
+              ],
+              "tile_id": "division3_round2_2026_07_27_k9"
+            },
+            {
+              "origin": "K15",
+              "record_row_offsets": [
+                2,
+                3,
+                4,
+                5
+              ],
+              "tile_id": "division3_round2_2026_08_01_k15"
+            },
+            {
+              "origin": "K21",
+              "record_row_offsets": [
+                2,
+                3,
+                4,
+                5
+              ],
+              "tile_id": "division3_round2_2026_08_03_k21"
+            },
+            {
+              "origin": "K27",
+              "record_row_offsets": [
+                2,
+                3,
+                4,
+                5
+              ],
+              "tile_id": "division3_round2_2026_08_08_k27"
+            },
+            {
+              "origin": "K33",
+              "record_row_offsets": [
+                2,
+                3,
+                4,
+                5
+              ],
+              "tile_id": "division3_round2_2026_08_10_k33"
+            },
+            {
+              "origin": "K39",
+              "record_row_offsets": [
+                2,
+                3,
+                4,
+                5
+              ],
+              "tile_id": "division3_round2_2026_08_11_k39"
+            }
+          ],
+          "record_anchor": {
+            "base": "tile_origin",
+            "column_offset": 0
+          },
+          "emit_order": "tiles_then_row_offsets"
+        }
+      },
+      "filter": {
+        "op": "predicate.not_empty",
+        "args": {
+          "value": {
+            "op": "cell.relative",
+            "args": {
+              "base": "record_anchor",
+              "row_offset": 0,
+              "column_offset": 5
+            }
+          }
+        }
+      },
+      "context": {},
+      "extractors": [],
+      "fields": {
+        "date": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "tile_origin",
+                "row_offset": 0,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_date",
+                "args": {
+                  "formats": [
+                    "auto"
+                  ],
+                  "locale": "en"
+                }
+              },
+              {
+                "op": "datetime.format_date",
+                "args": {
+                  "format": "%Y-%m-%d"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local schedule date from the merged tile header.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "time": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 2
+              }
+            },
+            "transforms": [
+              {
+                "op": "datetime.parse_time",
+                "args": {
+                  "formats": [
+                    "auto"
+                  ]
+                }
+              },
+              {
+                "op": "datetime.format_time",
+                "args": {
+                  "format": "%H:%M"
+                }
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": true,
+          "on_missing": "blocking_error",
+          "default": null,
+          "description": "Local scheduled start time.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_a": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 0
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "First participant; TBD is used only for a clearly scheduled unpublished slot.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "team_b": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 4
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": [
+              {
+                "source": {
+                  "op": "literal.value",
+                  "args": {
+                    "value": "TBD"
+                  }
+                },
+                "transforms": [],
+                "fallbacks": []
+              }
+            ]
+          },
+          "required": true,
+          "on_missing": "use_default",
+          "default": "TBD",
+          "description": "Second participant; TBD is used only for a clearly scheduled unpublished slot.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "stage": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "Division 3 — Round 2"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "warning",
+          "default": null,
+          "description": "Tournament phase derived from the source sheet and section.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "bo": {
+          "value": {
+            "source": {
+              "op": "literal.value",
+              "args": {
+                "value": "BO7"
+              }
+            },
+            "transforms": [],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "warning",
+          "default": null,
+          "description": "Stable best-of format documented in Tournament format for this division.",
+          "provenance": {
+            "enabled": true,
+            "include_transform_chain": true,
+            "include_source_coordinates": true
+          }
+        },
+        "match_label": {
+          "value": {
+            "source": {
+              "op": "cell.relative",
+              "args": {
+                "base": "record_anchor",
+                "row_offset": 0,
+                "column_offset": 5
+              }
+            },
+            "transforms": [
+              {
+                "op": "text.to_string",
+                "args": {}
+              },
+              {
+                "op": "text.trim",
+                "args": {}
+              }
+            ],
+            "fallbacks": []
+          },
+          "required": false,
+          "on_missing": "warning",
+          "default": null,
+          "description": "Workbook match number or label.",
           "provenance": {
             "enabled": true,
             "include_transform_chain": true,
@@ -2284,7 +3498,7 @@
         "TBA"
       ],
       "placeholder_patterns": [
-        "^(Winner|Loser)\\s+M\\d+$",
+        "^(Winner|Loser)\\s+(Match\\s+)?\\d+$",
         "^Seed\\s+#?\\d+$",
         "^Qualifier\\s+\\d+$"
       ]
@@ -2317,8 +3531,8 @@
       "team_order_sensitive": true
     },
     "record_count": {
-      "minimum": 135,
-      "maximum": 135,
+      "minimum": 205,
+      "maximum": 205,
       "on_violation": "warning"
     },
     "custom_rules": []
@@ -2358,22 +3572,22 @@
     "custom_config": {}
   },
   "metadata": {
-    "created_at": "2026-07-16T00:00:00Z",
+    "created_at": "2026-07-17T00:00:00Z",
     "created_by": "NETO ParserKey Builder",
     "updated_at": null,
     "source_files": [
       {
-        "filename": "BetBoom Rise of Legends 10 _ Schedule & Results.xlsx",
-        "sha256": "4640d7de01de3e7bbafa95447ec67b6d066388e1a03e192f5fca198608f7300d"
+        "filename": "BetBoom Битва Чемпионов_ Cплит #4 _ Очки и Расписание.xlsx"
       }
     ],
-    "notes": "Schema-valid draft for six tile-grid record sets. Europe/Moscow is a provisional base timezone because the workbook contains no explicit timezone label. Playoffs Match 5 and Match 6 on 2026-08-22 have blank start-time cells O10 and O11 and remain exportable with warnings; Match 6 team_b falls back to TBD. The public workbook is covered by a hash-pinned runtime snapshot.",
+    "notes": "Schema-valid draft for ten tile-grid record sets across five schedule sheets. Europe/Moscow is provisional because the workbook contains no explicit timezone label. Thirty-seven non-division matches contain one or more unpublished participant slots; 72 participant fields use explicit TBD fallbacks. The draft is not runtime-verified.",
     "tags": [
       "multiple_sheets",
       "multiple_divisions",
+      "hidden_schedule_sheets",
       "tile_grid",
       "cached_formulas",
-      "missing_playoff_times",
+      "unpublished_participants",
       "provisional_timezone",
       "v2"
     ]
